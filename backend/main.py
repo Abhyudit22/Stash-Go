@@ -3,6 +3,8 @@ from contextlib import asynccontextmanager
 from database import eng , Base
 from routes import product_routes
 import models
+from routes import sale_routes
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -19,6 +21,7 @@ app = FastAPI(
 )
 
 app.include_router(product_routes.router)
+app.include_router(sale_routes.router)
 
 @app.get("/")
 def read_root():

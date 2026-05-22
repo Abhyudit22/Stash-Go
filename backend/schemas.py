@@ -2,6 +2,8 @@ from pydantic import BaseModel
 from decimal import Decimal
 from typing import Optional
 from pydantic import Field
+from datetime import datetime
+
 
 
 class ProductBase(BaseModel):
@@ -51,3 +53,24 @@ class UserResponse(UserBase):
 
 class StockUpdate(BaseModel):
     quantity: int = Field(gt=0)
+
+class SaleCreate(BaseModel):
+    product_id: int
+    quantity: int = Field(gt=0)
+    customer_name: Optional[str] = None
+
+
+class SaleResponse(BaseModel):
+    id: int
+    product_id: int
+    product_name: str
+    quantity: int
+    selling_price_at_time: float
+    cost_price_at_time: float
+    total_amount: float
+    profit: float
+    customer_name: Optional[str]
+    sale_date: datetime
+    
+    class Config:
+        from_attributes = True
