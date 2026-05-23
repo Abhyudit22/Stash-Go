@@ -42,3 +42,10 @@ class Sale(Base):
     
     # Relationship
     product = relationship("Product", back_populates="sales")
+
+    @property
+    def product_name(self):
+        return self.product.name
+    def __init_subclass__(cls):
+        from sqlalchemy.orm import class_mapper
+        super().__init_subclass__()
