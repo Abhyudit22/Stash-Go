@@ -7,6 +7,7 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 
+
 class ProductBase(BaseModel):
     sku: str
     name: str
@@ -105,3 +106,71 @@ class DashboardResponse(BaseModel):
     low_stock_products: List[LowStockProduct]
     top_selling_products: List[TopSellingProduct]
     recent_sales: List[RecentSaleInfo]
+
+class ReturnCreate(BaseModel):
+    sale_id: int
+    product_id: int
+    quantity: int = Field(gt=0)
+    reason: str
+
+class ReturnResponse(BaseModel):
+    id: int
+    sale_id: int
+    product_id: int
+    product_name: str
+    quantity: int
+    reason: str
+    refund_amount: float
+    return_date: datetime
+    
+    class Config:
+        from_attributes = True
+
+class Billingitems(BaseModel):
+    # product_name : str
+    quantity : int
+    unit_price : int
+    total_price: int
+class BillingResponse(BaseModel):
+    
+    bill_number: str
+    bill_date: datetime
+    customer_name: Optional[str]
+    items: List
+    subtotal: float
+    discount: float
+    tax: float
+    grand_total: float
+    payment_method: str
+    payment_status: str
+
+class UserCreate(BaseModel):
+    username: str
+    email: str
+    password: str
+
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
+
+class UserResponse(BaseModel):
+    id: int
+    username: str
+    email: str
+    is_active: bool
+    is_admin: bool
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    username: Optional[str] = None

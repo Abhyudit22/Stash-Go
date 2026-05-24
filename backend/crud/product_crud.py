@@ -4,7 +4,18 @@ from schemas import ProductCreate, ProductUpdate
 
 
 def create_product(db: Session, product: ProductCreate):
+    # Get the last product ID
+    last_product = db.query(Product).order_by(Product.id.desc()).first()
+    
+    # Calculate next ID
+    if last_product:
+        next_id = last_product.id + 1
+    else:
+        next_id = 1
+    
+    # Create product with sequential ID
     new_product = Product(
+        id=next_id,  # Manually set ID
         sku=product.sku,
         name=product.name,
         cost_price=product.cost_price,
@@ -58,6 +69,7 @@ def delete_product(db: Session, product_id: int):
     db.commit()
 
     return product
+
 
 def increase_stock(db: Session, product_id: int, quantity: int):
     product = get_product_by_id(db, product_id)

@@ -3,12 +3,17 @@ from sqlalchemy.orm import Session
 from database import get_db
 from crud import sale_crud
 from schemas import SaleCreate, SaleResponse
+from utils.auth import get_current_active_user  # ← Add this import
 
 router = APIRouter(prefix="/sales", tags=["Sales"])
 
 
 @router.post("/", response_model=SaleResponse)
-def create_sale(sale: SaleCreate, db: Session = Depends(get_db)):
+def create_sale(
+    sale: SaleCreate, 
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_active_user)  # ← Add this
+):
     result = sale_crud.create_sale(db, sale)
     
     if result is None:
@@ -33,7 +38,10 @@ def create_sale(sale: SaleCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/", response_model=list[SaleResponse])
-def get_all_sales(db: Session = Depends(get_db)):
+def get_all_sales(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_active_user)  # ← Add this
+):
     sales = sale_crud.get_all_sales(db)
     
     result = []
@@ -55,8 +63,15 @@ def get_all_sales(db: Session = Depends(get_db)):
 
 
 @router.get("/{sale_id}", response_model=SaleResponse)
-def get_sale_by_id(sale_id: int, db: Session = Depends(get_db)):
+def get_sale_by_id(
+    sale_id: int, 
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_active_user)  # ← Add this
+):
     sale = sale_crud.get_sale_by_id(db, sale_id)
+    
+    # Fix: Remove the comma at the end of the line above
+    # sale = sale_crud.get_sale_by_id(db, sale_id)  ← No comma
     
     if sale is None:
         raise HTTPException(status_code=404, detail="Sale not found")
@@ -76,7 +91,11 @@ def get_sale_by_id(sale_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/product/{product_id}", response_model=list[SaleResponse])
-def get_sales_by_product(product_id: int, db: Session = Depends(get_db)):
+def get_sales_by_product(
+    product_id: int, 
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_active_user)  # ← Add this
+):
     sales = sale_crud.get_sales_by_product(db, product_id)
     
     result = []

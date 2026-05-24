@@ -5,14 +5,20 @@ from crud import product_crud
 
 
 def create_sale(db: Session, sale: SaleCreate):
+    #
+    last_sale = db.query(Sale).order_by(Sale.id.desc()).first()
+    
+  
+    if last_sale:
+        next_id = last_sale.id + 1
+    else:
+        next_id = 1
 
     product = product_crud.get_product_by_id(db, sale.product_id)
     
-   
     if product is None:
         return None
     
-   
     if product.quantity_left < sale.quantity:
         return "not_enough_stock"
     
@@ -22,6 +28,7 @@ def create_sale(db: Session, sale: SaleCreate):
     profit = (selling_price_at_time - cost_price_at_time) * sale.quantity
     
     db_sale = Sale(
+        id=next_id,  # Manual sequential ID
         product_id=sale.product_id,
         quantity=sale.quantity,
         selling_price_at_time=selling_price_at_time,
@@ -31,12 +38,10 @@ def create_sale(db: Session, sale: SaleCreate):
         customer_name=sale.customer_name
     )
     
-
     db.add(db_sale)
     db.commit()
     db.refresh(db_sale)
     
-
     product_crud.decrease_stock(db, sale.product_id, sale.quantity)
     
     return db_sale

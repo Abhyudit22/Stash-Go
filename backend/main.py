@@ -1,9 +1,10 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from database import eng , Base
-from routes import product_routes
 import models
-from routes import sale_routes
+from routes import product_routes, sale_routes, analytics_routes, return_routes,bill_routes,auth_routes
+
+
 
 
 @asynccontextmanager
@@ -22,6 +23,10 @@ app = FastAPI(
 
 app.include_router(product_routes.router)
 app.include_router(sale_routes.router)
+app.include_router(analytics_routes.router)
+app.include_router(return_routes.router)
+app.include_router(bill_routes.router)
+app.include_router(auth_routes.router)
 
 @app.get("/")
 def read_root():
