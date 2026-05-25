@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 
 
 eng = create_engine(
-    "postgresql://postgres:Abhyudit8520@localhost:5432/test")
+    "postgresql://postgres:Abhyudit8520@localhost:5432/helf")
 
 SessionLocal = sessionmaker(bind=eng)
 

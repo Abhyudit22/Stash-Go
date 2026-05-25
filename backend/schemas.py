@@ -1,61 +1,43 @@
-from pydantic import BaseModel
-from decimal import Decimal
-from typing import Optional
-from pydantic import Field
-from datetime import datetime
-from typing import List, Optional
 from pydantic import BaseModel, Field
+from datetime import datetime
+from typing import Optional, List
 
 
-
-class ProductBase(BaseModel):
+# Product Schemas
+class ProductCreate(BaseModel):
     sku: str
     name: str
-    cost_price: Decimal
-    selling_price: Decimal
-    quantity_left: int
-
-
-class ProductCreate(ProductBase):
-    pass
+    cost_price: float = Field(gt=0)
+    selling_price: float = Field(gt=0)
+    quantity_left: int = Field(ge=0)
 
 
 class ProductUpdate(BaseModel):
     sku: Optional[str] = None
     name: Optional[str] = None
-    cost_price: Optional[Decimal] = None
-    selling_price: Optional[Decimal] = None
-    quantity_left: Optional[int] = None
+    cost_price: Optional[float] = Field(None, gt=0)
+    selling_price: Optional[float] = Field(None, gt=0)
+    quantity_left: Optional[int] = Field(None, ge=0)
 
 
-class ProductResponse(ProductBase):
+class ProductResponse(BaseModel):
     id: int
-
+    sku: str
+    name: str
+    cost_price: float
+    selling_price: float
+    quantity_left: int
+    
     class Config:
         from_attributes = True
 
 
-class UserBase(BaseModel):
-    email: str
-
-
-class UserCreate(UserBase):
-    password: str
-
-
-class UserResponse(UserBase):
-    id: int
-    role: str
-    is_active: bool
-
-    class Config:
-        from_attributes = True
-
-
-
+# Stock Update Schema
 class StockUpdate(BaseModel):
     quantity: int = Field(gt=0)
 
+
+# Sale Schemas
 class SaleCreate(BaseModel):
     product_id: int
     quantity: int = Field(gt=0)
@@ -65,6 +47,7 @@ class SaleCreate(BaseModel):
 class SaleResponse(BaseModel):
     id: int
     product_id: int
+    product_name: str
     quantity: int
     selling_price_at_time: float
     cost_price_at_time: float
@@ -76,42 +59,14 @@ class SaleResponse(BaseModel):
     class Config:
         from_attributes = True
 
-class LowStockProduct(BaseModel):
-    id: int
-    name: str
-    sku: str
-    quantity_left: int
 
-
-class TopSellingProduct(BaseModel):
-    product_id: int
-    product_name: str
-    total_quantity_sold: int
-    total_revenue: float
-
-
-class RecentSaleInfo(BaseModel):
-    sale_id: int
-    product_name: str
-    quantity: int
-    total_amount: float
-    sale_date: datetime
-
-
-class DashboardResponse(BaseModel):
-    total_products: int
-    total_sales_count: int
-    total_revenue: float
-    total_profit: float
-    low_stock_products: List[LowStockProduct]
-    top_selling_products: List[TopSellingProduct]
-    recent_sales: List[RecentSaleInfo]
-
+# Return Schemas
 class ReturnCreate(BaseModel):
     sale_id: int
     product_id: int
     quantity: int = Field(gt=0)
     reason: str
+
 
 class ReturnResponse(BaseModel):
     id: int
@@ -126,24 +81,61 @@ class ReturnResponse(BaseModel):
     class Config:
         from_attributes = True
 
-class Billingitems(BaseModel):
-    # product_name : str
-    quantity : int
-    unit_price : int
-    total_price: int
-class BillingResponse(BaseModel):
+
+# Bill Schemas
+class BillCreate(BaseModel):
+    customer_name: Optional[str] = None
+    customer_phone: Optional[str] = None
+    customer_email: Optional[str] = None
+
+
+class BillItemCreate(BaseModel):
+    product_id: int
+    quantity: int = Field(gt=0)
+
+
+class BillUpdate(BaseModel):
+    customer_name: Optional[str] = None
+    customer_phone: Optional[str] = None
+    customer_email: Optional[str] = None
+    discount: Optional[float] = Field(default=0, ge=0)
+    tax: Optional[float] = Field(default=0, ge=0)
+    payment_method: Optional[str] = None
+
+
+class BillItemResponse(BaseModel):
+    id: int
+    product_id: int
+    product_name: str
+    quantity: int
+    unit_price: float
+    total_price: float
     
+    class Config:
+        from_attributes = True
+
+
+class BillResponse(BaseModel):
+    id: int
     bill_number: str
-    bill_date: datetime
     customer_name: Optional[str]
-    items: List
+    customer_phone: Optional[str]
+    customer_email: Optional[str]
+    created_date: datetime
+    status: str
     subtotal: float
     discount: float
     tax: float
     grand_total: float
-    payment_method: str
+    payment_method: Optional[str]
     payment_status: str
+    items: List[BillItemResponse] = []
+    
+    class Config:
+        from_attributes = True
 
+
+# Auth Schemas
 class UserCreate(BaseModel):
     username: str
     email: str
@@ -174,3 +166,35 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     username: Optional[str] = None
+
+# Analytics Schemas
+class LowStockProduct(BaseModel):
+    id: int
+    name: str
+    sku: str
+    quantity_left: int
+
+
+class TopSellingProduct(BaseModel):
+    product_id: int
+    product_name: str
+    total_quantity_sold: int
+    total_revenue: float
+
+
+class RecentSaleInfo(BaseModel):
+    sale_id: int
+    product_name: str
+    quantity: int
+    total_amount: float
+    sale_date: datetime
+
+
+class DashboardResponse(BaseModel):
+    total_products: int
+    total_sales_count: int
+    total_revenue: float
+    total_profit: float
+    low_stock_products: List[LowStockProduct]
+    top_selling_products: List[TopSellingProduct]
+    recent_sales: List[RecentSaleInfo]
