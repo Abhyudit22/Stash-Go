@@ -5,7 +5,7 @@ from datetime import  timedelta
 from database import get_db
 from crud import auth_crud
 from schemas import UserCreate,UserResponse,Token
-from utils.auth import authenticate_user, create_access_token, get_current_user, get_current_active_user, ACCESS_TOKEN_EXPIRE_MINUTES
+from utils.auth import authenticate_user, create_access_token, get_current_user, get_current_user, ACCESS_TOKEN_EXPIRE_MINUTES
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 

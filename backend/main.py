@@ -9,8 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 @asynccontextmanager
 async def lifespan(app: FastAPI):
    
-    Base.metadata.drop_all(bind=eng)
-    print("Database wiped clean automatically!")
+    # Base.metadata.drop_all(bind=eng)
+    # print("Database wiped clean automatically!")
 
    
     Base.metadata.create_all(bind=eng)

@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from crud import return_crud
 from schemas import ReturnCreate, ReturnResponse
-from utils.auth import get_current_active_user  # ← Add this import
+from utils.auth import get_current_user  # ← Add this import
 
 router = APIRouter(prefix="/returns", tags=["Returns"])
 
@@ -12,7 +12,7 @@ router = APIRouter(prefix="/returns", tags=["Returns"])
 def create_return(
     return_data: ReturnCreate, 
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_active_user)  # ← Add this
+    current_user = Depends(get_current_user)  # ← Add this
 ):
     result = return_crud.create_return(db, return_data)
     
@@ -33,7 +33,7 @@ def create_return(
 @router.get("/all_returns", response_model=list[ReturnResponse])
 def get_all_returns(
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_active_user)  # ← Add this
+    current_user = Depends(get_current_user)  # ← Add this
 ):
     returns = return_crud.get_all_returns(db)
     
@@ -47,7 +47,7 @@ def get_all_returns(
 def get_return_by_id(
     return_id: int, 
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_active_user)  # ← Add this
+    current_user = Depends(get_current_user)  # ← Add this
 ):
     return_item = return_crud.get_return_by_id(db, return_id)
     
@@ -63,7 +63,7 @@ def get_return_by_id(
 def get_returns_by_sale(
     sale_id: int,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_active_user)  # ← Add this
+    current_user = Depends(get_current_user)  # ← Add this
 ):
     returns = return_crud.get_returns_by_sale(db, sale_id)
     

@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from crud import bill_crud
 from schemas import BillCreate, BillItemCreate, BillUpdate, BillResponse
-from utils.auth import get_current_active_user  # ← Only import this, not admin
+from utils.auth import get_current_user  # ← Only import this, not admin
 from typing import List
 
 router = APIRouter(prefix="/bills", tags=["Bills"])
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/bills", tags=["Bills"])
 def create_bill(
     bill_data: BillCreate,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_active_user)  # ← Any logged-in user
+    current_user = Depends(get_current_user)  # ← Any logged-in user
 ):
     """Create a new draft bill (NO sale created, NO stock deducted)"""
     return bill_crud.create_bill(db, bill_data)
@@ -24,7 +24,7 @@ def add_item_to_bill(
     bill_id: int,
     item_data: BillItemCreate,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_active_user)  # ← Any logged-in user
+    current_user = Depends(get_current_user)  # ← Any logged-in user
 ):
     """Add item to draft bill"""
     result = bill_crud.add_item_to_bill(db, bill_id, item_data)
@@ -46,7 +46,7 @@ def remove_item_from_bill(
     bill_id: int,
     item_id: int,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_active_user)  # ← Any logged-in user
+    current_user = Depends(get_current_user)  # ← Any logged-in user
 ):
     """Remove item from draft bill"""
     result = bill_crud.remove_item_from_bill(db, bill_id, item_id)
@@ -66,7 +66,7 @@ def update_bill(
     bill_id: int,
     bill_update: BillUpdate,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_active_user)  # ← Any logged-in user
+    current_user = Depends(get_current_user)  # ← Any logged-in user
 ):
     """Update bill details (customer, discount, tax, payment method)"""
     result = bill_crud.update_bill_details(db, bill_id, bill_update)
@@ -83,7 +83,7 @@ def update_bill(
 def finalize_bill(
     bill_id: int,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_active_user)  # ← Any logged-in user
+    current_user = Depends(get_current_user)  # ← Any logged-in user
 ):
     """Finalize bill - THIS creates sales and deducts stock"""
     result = bill_crud.finalize_bill(db, bill_id, current_user.id)
@@ -105,7 +105,7 @@ def finalize_bill(
 @router.get("/", response_model=List[BillResponse])
 def get_all_bills(
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_active_user)  # ← Any logged-in user
+    current_user = Depends(get_current_user)  # ← Any logged-in user
 ):
     """Get all bills"""
     return bill_crud.get_all_bills(db)
@@ -115,7 +115,7 @@ def get_all_bills(
 def get_bill(
     bill_id: int,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_active_user)  # ← Any logged-in user
+    current_user = Depends(get_current_user)  # ← Any logged-in user
 ):
     """Get bill by ID with all items"""
     bill = bill_crud.get_bill(db, bill_id)
@@ -128,7 +128,7 @@ def get_bill(
 def delete_bill(
     bill_id: int,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_active_user)  
+    current_user = Depends(get_current_user)  
 ):
     
     result = bill_crud.delete_bill(db, bill_id)

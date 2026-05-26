@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from crud import sale_crud
 from schemas import SaleCreate, SaleResponse
-from utils.auth import get_current_active_user  # ← Add this import
+from utils.auth import get_current_user  # ← Add this import
 from sqlalchemy.orm import joinedload
 import models
 
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/sales", tags=["Sales"])
 def create_sale(
     sale: SaleCreate, 
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_active_user)  # ← Add this
+    current_user = Depends(get_current_user)  # ← Add this
 ):
     result = sale_crud.create_sale(db, sale)
     
@@ -42,7 +42,7 @@ def create_sale(
 @router.get("/all", response_model=list[SaleResponse])
 def get_all_sales(
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_active_user)  # ← Add this
+    current_user = Depends(get_current_user)  # ← Add this
 ):
     sales = sale_crud.get_all_sales(db)
     
@@ -68,7 +68,7 @@ def get_all_sales(
 def get_sale_by_id(
     sale_id: int, 
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_active_user)  # ← Add this
+    current_user = Depends(get_current_user)  # ← Add this
 ):
     sale = sale_crud.get_sale_by_id(db, sale_id)
     
@@ -96,7 +96,7 @@ def get_sale_by_id(
 def get_sales_by_product(
     product_id: int, 
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_active_user)  # ← Add this
+    current_user = Depends(get_current_user)  # ← Add this
 ):
     sales = sale_crud.get_sales_by_product(db, product_id)
     
@@ -120,7 +120,7 @@ def get_sales_by_product(
 @router.get("/", response_model=list[dict])
 def get_sales_ledger(
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_active_user)
+    current_user = Depends(get_current_user)
 ):
     records = db.query(models.BillItem)\
                 .options(joinedload(models.BillItem.product))\

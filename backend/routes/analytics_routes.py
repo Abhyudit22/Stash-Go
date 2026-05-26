@@ -8,7 +8,7 @@ from schemas import (
     TopSellingProduct,
     RecentSaleInfo
 )
-from utils.auth import get_current_active_user
+from utils.auth import get_current_user
 
 router = APIRouter(prefix="/analytics", tags=["Analytics"])
 
@@ -16,7 +16,7 @@ router = APIRouter(prefix="/analytics", tags=["Analytics"])
 @router.get("/dashboard", response_model=DashboardResponse)
 def get_dashboard(
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_active_user)
+    current_user = Depends(get_current_user)
 ):
 
     total_products = analytics_crud.get_total_products_count(db) or 0

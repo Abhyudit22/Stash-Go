@@ -5,7 +5,7 @@ from typing import List
 from database import get_db
 from schemas import ProductCreate, ProductUpdate, ProductResponse, StockUpdate
 from crud import product_crud
-from utils.auth import get_current_active_user  # ← Add this import
+from utils.auth import get_current_user  # ← Add this import
 
 router = APIRouter(
     prefix="/products",
@@ -17,7 +17,7 @@ router = APIRouter(
 def create_product(
     product: ProductCreate, 
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_active_user)  # ← Add this
+    current_user = Depends(get_current_user)  # ← Add this
 ):
     existing_product = product_crud.get_product_by_sku(db, product.sku)
 
@@ -33,7 +33,7 @@ def create_product(
 @router.get("/getall", response_model=List[ProductResponse])
 def get_all_products(
     db: Session = Depends(get_db),
-    # current_user = Depends(get_current_active_user)  # ← Add this
+    # current_user = Depends(get_current_user)  # ← Add this
 ):
     return product_crud.get_all_products(db)
 
@@ -42,7 +42,7 @@ def get_all_products(
 def get_product(
     product_id: int, 
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_active_user)  # ← Add this
+    current_user = Depends(get_current_user)  # ← Add this
 ):
     product = product_crud.get_product_by_id(db, product_id)
 
@@ -60,7 +60,7 @@ def update_product(
     product_id: int,
     product_data: ProductUpdate,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_active_user)  # ← Add this
+    current_user = Depends(get_current_user)  # ← Add this
 ):
     updated_product = product_crud.update_product(db, product_id, product_data)
 
@@ -77,7 +77,7 @@ def update_product(
 def delete_product(
     product_id: int, 
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_active_user)  # ← Add this
+    current_user = Depends(get_current_user)  # ← Add this
 ):
     deleted_product = product_crud.delete_product(db, product_id)
 
@@ -97,7 +97,7 @@ def increase_product_stock(
     product_id: int,
     stock_data: StockUpdate,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_active_user)  # ← Add this
+    current_user = Depends(get_current_user)  # ← Add this
 ):
     updated_product = product_crud.increase_stock(
         db,
@@ -119,7 +119,7 @@ def decrease_product_stock(
     product_id: int,
     stock_data: StockUpdate,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_active_user)  # ← Add this
+    current_user = Depends(get_current_user)  # ← Add this
 ):
     updated_product = product_crud.decrease_stock(
         db,
