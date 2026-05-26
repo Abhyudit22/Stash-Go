@@ -3,7 +3,6 @@ from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from database import Base
 
-
 class Product(Base):
     __tablename__ = "products"
     
@@ -14,10 +13,10 @@ class Product(Base):
     selling_price = Column(Float, nullable=False)
     quantity_left = Column(Integer, nullable=False)
     
-    # Relationships
-    sales = relationship("Sale", back_populates="product")
-    returns = relationship("Return", back_populates="product")
-    bill_items = relationship("BillItem", back_populates="product")
+    # Relationships configured with cascading deletes
+    sales = relationship("Sale", back_populates="product", cascade="all, delete-orphan")
+    returns = relationship("Return", back_populates="product", cascade="all, delete-orphan")
+    bill_items = relationship("BillItem", back_populates="product", cascade="all, delete-orphan")
 
 
 class Sale(Base):

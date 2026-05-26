@@ -33,7 +33,7 @@ def create_product(
 @router.get("/getall", response_model=List[ProductResponse])
 def get_all_products(
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_active_user)  # ← Add this
+    # current_user = Depends(get_current_active_user)  # ← Add this
 ):
     return product_crud.get_all_products(db)
 
