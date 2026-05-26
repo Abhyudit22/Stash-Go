@@ -8,7 +8,7 @@ from utils.auth import get_current_active_user  # ← Add this import
 router = APIRouter(prefix="/returns", tags=["Returns"])
 
 
-@router.post("/", response_model=ReturnResponse)
+@router.post("/create", response_model=ReturnResponse)
 def create_return(
     return_data: ReturnCreate, 
     db: Session = Depends(get_db),
@@ -30,7 +30,7 @@ def create_return(
     return result
 
 
-@router.get("/", response_model=list[ReturnResponse])
+@router.get("/all_returns", response_model=list[ReturnResponse])
 def get_all_returns(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_active_user)  # ← Add this
@@ -39,7 +39,7 @@ def get_all_returns(
     
     for return_item in returns:
         return_item.product_name = return_item.product.name
-    
+    582
     return returns
 
 
@@ -61,7 +61,7 @@ def get_return_by_id(
 
 @router.get("/sale/{sale_id}", response_model=list[ReturnResponse])
 def get_returns_by_sale(
-    sale_id: int, 
+    sale_id: int,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_active_user)  # ← Add this
 ):

@@ -8,7 +8,7 @@ from schemas import (
     TopSellingProduct,
     RecentSaleInfo
 )
-from utils.auth import get_current_active_user  # ← Add this import
+from utils.auth import get_current_active_user
 
 router = APIRouter(prefix="/analytics", tags=["Analytics"])
 
@@ -16,15 +16,15 @@ router = APIRouter(prefix="/analytics", tags=["Analytics"])
 @router.get("/dashboard", response_model=DashboardResponse)
 def get_dashboard(
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_active_user)  # ← Add this
+    current_user = Depends(get_current_active_user)
 ):
-    # Get all metrics
-    total_products = analytics_crud.get_total_products_count(db)
-    total_sales_count = analytics_crud.get_total_sales_count(db)
-    total_revenue = analytics_crud.get_total_revenue(db)
-    total_profit = analytics_crud.get_total_profit(db)
+
+    total_products = analytics_crud.get_total_products_count(db) or 0
+    total_sales_count = analytics_crud.get_total_sales_count(db) or 0
+    total_revenue = analytics_crud.get_total_revenue(db) or 0.0
+    total_profit = analytics_crud.get_total_profit(db) or 0.0
     
-    low_stock_products_data = analytics_crud.get_low_stock_products(db)
+    low_stock_products_data = analytics_crud.get_low_stock_products(db) or []
     low_stock_products = []
     for product in low_stock_products_data:
         low_stock_products.append(
@@ -36,31 +36,35 @@ def get_dashboard(
             )
         )
     
-    top_selling_data = analytics_crud.get_top_selling_products(db)
+    top_selling_data = analytics_crud.get_top_selling_products(db) or []
     top_selling_products = []
     for item in top_selling_data:
+        rev_val = item.total_revenue if item.total_revenue is not None else 0.0
         top_selling_products.append(
             TopSellingProduct(
                 product_id=item.product_id,
                 product_name=item.product_name,
-                total_quantity_sold=item.total_quantity_sold,
-                total_revenue=float(item.total_revenue)
+                total_quantity_sold=item.total_quantity_sold or 0,
+                total_revenue=float(rev_val)
             )
         )
     
-    recent_sales_data = analytics_crud.get_recent_sales(db)
+    # 4. Process Recent Sales safely
+    recent_sales_data = analytics_crud.get_recent_sales(db) or []
     recent_sales = []
     for sale in recent_sales_data:
+        amt_val = sale.total_amount if sale.total_amount is not None else 0.0
         recent_sales.append(
             RecentSaleInfo(
                 sale_id=sale.sale_id,
                 product_name=sale.product_name,
-                quantity=sale.quantity,
-                total_amount=float(sale.total_amount),
+                quantity=sale.quantity or 0,
+                total_amount=float(amt_val),
                 sale_date=sale.sale_date
             )
         )
     
+    # Return clean values to clear the frontend infinite loading screen
     return DashboardResponse(
         total_products=total_products,
         total_sales_count=total_sales_count,

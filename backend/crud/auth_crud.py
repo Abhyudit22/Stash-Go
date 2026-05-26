@@ -7,10 +7,11 @@ from sqlalchemy.orm import Session
 def create_user(db: Session, user: UserCreate):
     hashed_password = get_password_hash(user.password)
     
-    db_user = User_Auth(  # Changed
+    db_user = User_Auth(
         username=user.username,
         email=user.email,
-        hashed_password=hashed_password
+        hashed_password=hashed_password,
+        # is_active=True  
     )
     
     db.add(db_user)

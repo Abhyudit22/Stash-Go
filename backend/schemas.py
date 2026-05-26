@@ -151,8 +151,8 @@ class UserResponse(BaseModel):
     id: int
     username: str
     email: str
-    is_active: bool
-    is_admin: bool
+    # is_active: bool
+    # is_admin: bool
     created_at: datetime
     
     class Config:

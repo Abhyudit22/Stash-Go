@@ -4,6 +4,8 @@ from database import get_db
 from crud import sale_crud
 from schemas import SaleCreate, SaleResponse
 from utils.auth import get_current_active_user  # ← Add this import
+from sqlalchemy.orm import joinedload
+import models
 
 router = APIRouter(prefix="/sales", tags=["Sales"])
 
@@ -37,7 +39,7 @@ def create_sale(
     }
 
 
-@router.get("/", response_model=list[SaleResponse])
+@router.get("/all", response_model=list[SaleResponse])
 def get_all_sales(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_active_user)  # ← Add this
@@ -113,4 +115,34 @@ def get_sales_by_product(
             "sale_date": sale.sale_date
         })
     
+    return result
+@router.get("", response_model=list[dict])
+@router.get("/", response_model=list[dict])
+def get_sales_ledger(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_active_user)
+):
+    records = db.query(models.BillItem)\
+                .options(joinedload(models.BillItem.product))\
+                .options(joinedload(models.BillItem.bill))\
+                .all()
+    
+    result = []
+    for item in records:
+        result.append({
+            "id": item.bill_id,
+            "bill_id": item.bill_id,
+            "product_id": item.product_id,
+            "product_name": item.product.name if item.product else f"Product #{item.product_id}",
+            "sku": item.product.sku if item.product else "N/A",
+            "quantity": item.quantity,
+            "selling_price": item.product.selling_price if item.product else 0.0,
+            "cost_price": item.product.cost_price if item.product else 0.0,
+            "customer_name": item.bill.customer_name if item.bill else "Walk-in Customer",
+            "customer_phone": item.bill.customer_phone if item.bill else "N/A",
+            "payment_method": item.bill.payment_method if item.bill else "Cash",
+            "discount": item.bill.discount if item.bill else 0.0,
+            "tax": item.bill.tax if item.bill else 0.0,
+            "bill_number": item.bill.bill_number if item.bill else f"BILL-2026-{item.bill_id}"
+        })
     return result

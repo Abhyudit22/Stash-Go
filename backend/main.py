@@ -2,21 +2,23 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from database import eng , Base
 import models
-from routes import product_routes, sale_routes, analytics_routes, return_routes,bill_routes,auth_routes
+from routes import product_routes, sale_routes, analytics_routes, return_routes, bill_routes, auth_routes
 from fastapi.middleware.cors import CORSMiddleware
-
-
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+   
+    Base.metadata.drop_all(bind=eng)
+    print("Database wiped clean automatically!")
 
+   
     Base.metadata.create_all(bind=eng)
-    print(" Database tables verified and successfully created in Docker!")
+    print("Database tables verified and successfully created in Docker!")
+    
     yield
     print("Application shutting down cleanly")
 
-# 1. Create the FastAPI application instance and close the parenthesis
 app = FastAPI(
     title="Stash GO",
     version="1.0.0",
@@ -33,6 +35,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Application Routing Layout Tree Modules
 app.include_router(product_routes.router)
 app.include_router(sale_routes.router)
 app.include_router(analytics_routes.router)
@@ -40,14 +44,12 @@ app.include_router(return_routes.router)
 app.include_router(bill_routes.router)
 app.include_router(auth_routes.router)
 
+
 @app.get("/")
 def read_root():
     """ 
     testing the backend 
-
     """
-    return{
+    return {
         "status" : "online"
     }
-# if __name__=="__main__":
-#     main()
