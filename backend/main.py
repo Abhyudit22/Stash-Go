@@ -2,17 +2,14 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from database import eng , Base
 import models
-from routes import product_routes, sale_routes, analytics_routes, return_routes, bill_routes, auth_routes
+from routes import product_routes, sale_routes, analytics_routes, return_routes, bill_routes, auth_routes ,report_routes
 from fastapi.middleware.cors import CORSMiddleware
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-   
     # Base.metadata.drop_all(bind=eng)
     # print("Database wiped clean automatically!")
 
-   
     Base.metadata.create_all(bind=eng)
     print("Database tables verified and successfully created in Docker!")
     
@@ -43,8 +40,7 @@ app.include_router(analytics_routes.router)
 app.include_router(return_routes.router)
 app.include_router(bill_routes.router)
 app.include_router(auth_routes.router)
-
-
+app.include_router(report_routes.router)
 @app.get("/")
 def read_root():
     """ 
@@ -52,4 +48,4 @@ def read_root():
     """
     return {
         "status" : "online"
-    }
+    }     

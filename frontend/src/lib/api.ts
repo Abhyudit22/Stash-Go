@@ -240,3 +240,38 @@ export async function getAllReturns() {
         return [];
     }
 }
+export async function removeItemFromBill(billId: number, itemId: number) {
+  try {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`http://localhost:8000/bills/${billId}/items/${itemId}`, {
+      method: "DELETE",
+      headers: { 
+        "Authorization": `Bearer ${token}` 
+      }
+    });
+    
+    if (!res.ok) {
+        console.error("Failed to remove item. Status:", res.status);
+        return null;
+    }
+    
+    return await res.json();
+  } catch (error) {
+    console.error("Error calling remove item API:", error);
+    return null;
+  }
+}
+export async function deleteSaleBill(billId: number) {
+  try {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`http://localhost:8000/bills/${billId}`, {
+      method: "DELETE",
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error("Failed to delete bill");
+    return true;
+  } catch (error) {
+    console.error("Error deleting bill:", error);
+    return false;
+  }
+}

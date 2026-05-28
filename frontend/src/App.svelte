@@ -3,9 +3,11 @@
   import { 
     pingServer, getProduct, createProduct, adjustStock, deleteProduct, 
     createDraftBill, addItemToBill, updateBillDetails, finalizeBill, 
-    getAllSales, getDashboardAnalytics, initiateProductReturn, getAllReturns 
+    removeItemFromBill, // Controls deleting items from active draft
+    getAllSales, getDashboardAnalytics, initiateProductReturn, getAllReturns,
+    deleteSaleBill // Controls deleting finalized bills from the ledger
   } from "./lib/api";
-  import type { Product } from "./lib/types"; 
+  import type { Product, Bill } from "./lib/types"; 
 
   import Login from "./lib/Login.svelte";
   import Dashboard from "./lib/Dashboard.svelte";
@@ -32,9 +34,10 @@
     quantity_left: 0
   });
 
-  let activeBill: any = $state(null);
+  let activeBill: Bill | null = $state(null);
   let customerName = $state(""), customerPhone = $state(""), customerEmail = $state("");
-  let saleSku = $state(""), saleQty = $state(1), billingDiscount = $state(0), billingTax = $state(0), paymentMethod = $state("Cash");
+  let saleSku = $state(""); // Bound securely as a string
+  let saleQty = $state(1), billingDiscount = $state(0), billingTax = $state(0), paymentMethod = $state("Cash");
 
   onMount(async () => {
     const data = await pingServer();
@@ -52,6 +55,7 @@
     returnsHistory = await getAllReturns(); 
   }
 
+  // --- INVENTORY MANAGEMENT ---
   async function handleAddProduct() {
     const success = await createProduct({ 
       sku: newProduct.sku, 
@@ -78,6 +82,7 @@
     }
   }
 
+  // --- RETURNS MANAGEMENT ---
   async function handleProcessReturn(returnData: any) {
     if (await initiateProductReturn(returnData)) {
       alert(`Return recorded successfully for Sale #${returnData.sale_id}!`);
@@ -85,6 +90,7 @@
     }
   }
 
+  // --- BILLING COUNTER (DRAFTS) ---
   async function handleCreateBill() {
     const bill = await createDraftBill({ customer_name: customerName, customer_phone: customerPhone, customer_email: customerEmail });
     if (bill) activeBill = bill;
@@ -107,18 +113,58 @@
     }
   }
 
+  async function handleRemoveItem(itemId: number) {
+    if (!activeBill) return;
+    const updatedBill = await removeItemFromBill(activeBill.id, itemId);
+    if (updatedBill) {
+      activeBill = updatedBill;
+    } else {
+      alert("Failed to remove item.");
+    }
+  }
+
   async function handleCheckoutAndFinalize() {
     if (!activeBill) return;
-    const detailsUpdated = await updateBillDetails(activeBill.id, { discount: billingDiscount, tax: billingTax, payment_method: paymentMethod });
+    
+    // Convert the UI % inputs into flat Rupee amounts for the backend
+    const flatDiscountAmount = activeBill.subtotal * (billingDiscount / 100);
+    const flatTaxAmount = activeBill.subtotal * (billingTax / 100);
+
+    const detailsUpdated = await updateBillDetails(activeBill.id, { 
+      discount: flatDiscountAmount, 
+      tax: flatTaxAmount, 
+      payment_method: paymentMethod 
+    });
+    
     if (!detailsUpdated) return;
+    
     const finalReceipt = await finalizeBill(activeBill.id);
+    
     if (finalReceipt) {
       alert(`Invoice order ${finalReceipt.bill_number} finalized successfully!`);
-      activeBill = null; customerName = ""; customerPhone = ""; customerEmail = ""; billingDiscount = 0; billingTax = 0;
+      activeBill = null; 
+      customerName = ""; 
+      customerPhone = ""; 
+      customerEmail = ""; 
+      billingDiscount = 0; 
+      billingTax = 0;
       await refreshAllData(); 
     }
   }
 
+  // --- SALES LEDGER ACTIONS ---
+  async function handleDeleteSale(billId: number) {
+    if (confirm(`Are you sure you want to permanently delete Invoice #${billId}?`)) {
+      const success = await deleteSaleBill(billId);
+      if (success) {
+        await refreshAllData();
+      } else {
+        alert("Failed to delete the invoice.");
+      }
+    }
+  }
+
+  // --- AUTH ---
   function handleLogout() { 
     localStorage.removeItem("token"); 
     isAuthenticated = false; 
@@ -150,15 +196,19 @@
     <main>
       {#if activePage === "dashboard"}
         <Dashboard {backendStatus} analyticsData={salesAnalytics} />
+      
       {:else if activePage === "inventory"}
         <Inventory {products} {handleAddProduct} {handleStockChange} {handleRemove} bind:newProduct />
+      
       {:else if activePage === "counter"}
         <Bills 
-          {products} {activeBill} {handleCreateBill} {handleAddItemToBill} {handleCheckoutAndFinalize}
+          {products} {activeBill} {handleCreateBill} {handleAddItemToBill} {handleCheckoutAndFinalize} {handleRemoveItem}
           bind:customerName bind:customerPhone bind:customerEmail bind:saleSku bind:saleQty bind:billingDiscount bind:billingTax bind:paymentMethod
         />
+      
       {:else if activePage === "sales"}
-        <Sales {salesHistory} />
+        <Sales {salesHistory} {handleDeleteSale} />
+      
       {:else if activePage === "returns"}
         <Returns {returnsHistory} {handleProcessReturn} />
       {/if}

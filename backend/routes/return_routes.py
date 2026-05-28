@@ -25,7 +25,7 @@ def create_return(
     if result == "quantity_exceeds_sale":
         raise HTTPException(status_code=400, detail="Cannot return more than originally purchased")
     
-    result.product_name = result.product.name
+    result.product_id = result.product.id
     
     return result
 
@@ -38,7 +38,7 @@ def get_all_returns(
     returns = return_crud.get_all_returns(db)
     
     for return_item in returns:
-        return_item.product_name = return_item.product.name
+        return_item.product_id = return_item.product.id
     582
     return returns
 
@@ -54,7 +54,7 @@ def get_return_by_id(
     if return_item is None:
         raise HTTPException(status_code=404, detail="Return not found")
     
-    return_item.product_name = return_item.product.name
+    return_item.product_id = return_item.product.id
     
     return return_item
 
@@ -68,6 +68,6 @@ def get_returns_by_sale(
     returns = return_crud.get_returns_by_sale(db, sale_id)
     
     for return_item in returns:
-        return_item.product_name = return_item.product.name
+        return_item.product_id = return_item.product.id
     
     return returns

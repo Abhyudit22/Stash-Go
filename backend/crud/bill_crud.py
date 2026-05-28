@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 from models import Bill, BillItem, Product, Sale
 from crud import product_crud
 from schemas import BillCreate, BillItemCreate, BillUpdate
+import models
+
 
 
 def generate_bill_number(db: Session):
@@ -210,18 +212,29 @@ def get_bill(db: Session, bill_id: int):
 def get_all_bills(db: Session):
     """Get all bills"""
     return db.query(Bill).order_by(Bill.created_date.desc()).all()
-
-
 def delete_bill(db: Session, bill_id: int):
-    """Delete draft bill only"""
-    bill = db.query(Bill).filter(Bill.id == bill_id).first()
+    # Fetch the bill
+    bill = db.query(models.Bill).filter(models.Bill.id == bill_id).first()
+    
     if not bill:
         return "bill_not_found"
+
+    # --- 1. NEW FIX: Delete the linked record in the `sales` table first ---
+    db.query(models.Sale).filter(models.Sale.bill_id == bill_id).delete()
     
-    if bill.status != "draft":
-        return "cannot_delete_finalized"
-    
+    # --- 2. Restore stock and delete the line items ---
+    if hasattr(bill, 'items'):
+        for item in bill.items:
+            # Restore the stock
+            product = db.query(models.Product).filter(models.Product.id == item.product_id).first()
+            if product:
+                product.quantity_left += item.quantity 
+            
+            # Delete the item
+            db.delete(item)
+            
+    # --- 3. Now that all children are gone, safely delete the parent bill ---
     db.delete(bill)
     db.commit()
     
-    return "deleted"
+    return "success"
