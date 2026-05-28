@@ -39,7 +39,6 @@ def get_all_returns(
     
     for return_item in returns:
         return_item.product_id = return_item.product.id
-    582
     return returns
 
 
