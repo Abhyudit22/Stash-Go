@@ -10,8 +10,8 @@
   let isLoading = false;
   let showPassword = false;
   let rememberMe = false;
-
-  const Base_URL = "http://127.0.0.1:8000";
+  import {Base_URL} from "./api"
+  // const Base_URL = "http://127.0.0.1:8000";
 
   export let onLoginSuccess: () => void; 
 

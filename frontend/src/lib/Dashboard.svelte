@@ -9,9 +9,9 @@
     top_selling_products: Array<{ product_id: string; product_name: string; total_quantity_sold: number; total_revenue: number }>;
     recent_sales: Array<{ sale_id: number; product_name: string; quantity: number; total_amount: number; sale_date: string }>;
   } | null = null;
-
+  import {Base_URL} from "./api"
   // --- Report Export Logic ---
-  const Base_URL = "http://127.0.0.1:8000";
+  // const Base_URL = "http://127.0.0.1:8000";
   type ReportType = 'excel' | 'pdf';
 
   async function downloadReport(type: ReportType): Promise<void> {
