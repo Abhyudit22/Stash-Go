@@ -98,8 +98,11 @@ class BillItem(Base):
     
     @property
     def product_name(self):
-        return self.product.name
+        return self.product.name if self.product else "Unknown Product"
 
+    @property
+    def sku(self):
+        return self.product.sku if self.product else "N/A"
 
 class User_Auth(Base):
     __tablename__ = "user_auth"

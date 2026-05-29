@@ -102,11 +102,11 @@ class BillUpdate(BaseModel):
     tax: Optional[float] = Field(default=0, ge=0)
     payment_method: Optional[str] = None
 
-
 class BillItemResponse(BaseModel):
     id: int
     product_id: int
     product_name: str
+    sku: str  
     quantity: int
     unit_price: float
     total_price: float

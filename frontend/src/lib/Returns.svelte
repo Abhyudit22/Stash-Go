@@ -2,16 +2,16 @@
   export let returnsHistory: any[] = [];
   export let handleProcessReturn: (data: any) => Promise<void>;
 
-  let saleId = "", productId = "", returnQty = 1, returnReason = "";
+  let saleId = "", productId: number = 0, returnQty = 1, returnReason = "";
 
   async function localSubmit() {
     await handleProcessReturn({
       sale_id: parseInt(saleId),
-      product_id: productId,
+      product_id: Number(productId),
       quantity: returnQty,
       reason: returnReason
     });
-    saleId = ""; productId = ""; returnQty = 1; returnReason = "";
+    saleId = ""; productId = 0; returnQty = 1; returnReason = "";
   }
 </script>
 
@@ -34,8 +34,8 @@
             <input type="number" id="ret-sale" bind:value={saleId} placeholder="104" required />
           </div>
           <div class="field-group">
-            <label for="ret-sku">Product SKU ID</label>
-            <input type="text" id="ret-sku" bind:value={productId} placeholder="PROD-SKU" required />
+            <label for="ret-sku">Product ID</label>
+            <input type="number" id="ret-sku" bind:value={productId} placeholder="3" required />
           </div>
         </div>
         <div class="field-group">
@@ -103,7 +103,6 @@
   .panel-card.dark-bg { background: #15151a; }
   .panel-title { font-size: 14px; font-weight: bold; text-transform: uppercase; color: #ff9800; letter-spacing: 0.8px; margin-bottom: 20px; border-bottom: 1px solid #29292e; padding-bottom: 8px; }
 
-  
   .stacked-form, .audit-stream, .audit-card { display: flex; flex-direction: column; }
   .stacked-form { gap: 16px; }
   .field-row { gap: 16px; width: 100%; }
@@ -120,7 +119,6 @@
   .audit-card { background: #1e1e24; border: 1px solid #29292e; border-radius: 6px; padding: 16px; border-left: 4px solid #ff9800; }
   .audit-header { font-size: 12px; font-weight: bold; margin-bottom: 10px; color: #ffffff; }
   .audit-body p { margin: 4px 0; font-size: 13px; color: #b0bec5; }
-  
 
   .text-orange { color: #ff9800; font-weight: bold; }
   .text-muted { color: #8e8e9a; }

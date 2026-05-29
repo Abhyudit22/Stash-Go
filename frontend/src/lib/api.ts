@@ -36,8 +36,9 @@ export async function getProduct() {
     } catch (error) {
         console.error("Could not reach the StashGO:", error);
         return []; 
- }
+    }
 }
+
 export async function createProduct(productData: { sku: string; name: string; cost_price: number; selling_price: number; quantity_left: number }) {
     try {
         const token = localStorage.getItem("token");
@@ -55,6 +56,7 @@ export async function createProduct(productData: { sku: string; name: string; co
         return false;
     }
 }
+
 export async function adjustStock(productId: string, action: "increase-stock" | "decrease-stock") {
     try {
         const token = localStorage.getItem("token");
@@ -186,6 +188,7 @@ export async function finalizeBill(billId: number) {
         return null;
     }
 }
+
 export async function getDashboardAnalytics() {
     try {
         const token = localStorage.getItem("token");
@@ -197,17 +200,17 @@ export async function getDashboardAnalytics() {
             }
         });
         if (!response.ok) return null;
-        return await response.json(); // Returns the exact DashboardResponse schema object
+        return await response.json();
     } catch (error) {
         console.error("Error fetching dashboard analytics:", error);
         return null;
     }
 }
-// 1. Process a new product return request container
-export async function initiateProductReturn(returnData: { sale_id: number; product_id: string; quantity: number; reason: string }) {
+
+export async function initiateProductReturn(returnData: { sale_id: number; product_id: number, quantity: number; reason: string }) {
     try {
         const token = localStorage.getItem("token");
-        const response = await fetch(`${Base_URL}/returns/create/`, {
+        const response = await fetch(`${Base_URL}/returns/create`, {  // ✅ trailing slash removed
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${token}`,
@@ -226,10 +229,11 @@ export async function initiateProductReturn(returnData: { sale_id: number; produ
         return null;
     }
 }
+
 export async function getAllReturns() {
     try {
         const token = localStorage.getItem("token");
-        const response = await fetch(`${Base_URL}/returns/all_returns/`, {
+        const response = await fetch(`${Base_URL}/returns/all_returns`, {  // ✅ trailing slash removed
             method: "GET",
             headers: { "Authorization": `Bearer ${token}` }
         });
@@ -240,38 +244,38 @@ export async function getAllReturns() {
         return [];
     }
 }
+
 export async function removeItemFromBill(billId: number, itemId: number) {
-  try {
-    const token = localStorage.getItem("token");
-    const res = await fetch(`http://localhost:8000/bills/${billId}/items/${itemId}`, {
-      method: "DELETE",
-      headers: { 
-        "Authorization": `Bearer ${token}` 
-      }
-    });
-    
-    if (!res.ok) {
-        console.error("Failed to remove item. Status:", res.status);
+    try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${Base_URL}/bills/${billId}/items/${itemId}`, {
+            method: "DELETE",
+            headers: { 
+                "Authorization": `Bearer ${token}` 
+            }
+        });
+        if (!res.ok) {
+            console.error("Failed to remove item. Status:", res.status);
+            return null;
+        }
+        return await res.json();
+    } catch (error) {
+        console.error("Error calling remove item API:", error);
         return null;
     }
-    
-    return await res.json();
-  } catch (error) {
-    console.error("Error calling remove item API:", error);
-    return null;
-  }
 }
+
 export async function deleteSaleBill(billId: number) {
-  try {
-    const token = localStorage.getItem("token");
-    const res = await fetch(`http://localhost:8000/bills/${billId}`, {
-      method: "DELETE",
-      headers: { "Authorization": `Bearer ${token}` }
-    });
-    if (!res.ok) throw new Error("Failed to delete bill");
-    return true;
-  } catch (error) {
-    console.error("Error deleting bill:", error);
-    return false;
-  }
+    try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${Base_URL}/bills/${billId}`, {
+            method: "DELETE",
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error("Failed to delete bill");
+        return true;
+    } catch (error) {
+        console.error("Error deleting bill:", error);
+        return false;
+    }
 }

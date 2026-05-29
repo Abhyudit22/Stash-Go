@@ -7,7 +7,6 @@
   let expandedBillId: number | null = null;
   let hoveredData: any = null; 
 
-  // --- 1. Aggregation Logic ---
   function aggregateSalesData(records: any[]) {
     if (!records || records.length === 0) return [];
     const billMap = new Map();
@@ -44,8 +43,12 @@
       currentBill.total_profit += netProf;
 
       currentBill.items.push({
-        product_name: item.product?.name || `Item Ref #${item.product_id || '?'}`,
-        sku: item.product?.sku || "N/A", quantity: qty, unit_price: unitPrice, net_revenue: netRev, net_profit: netProf
+        product_name: item.product_name || item.product?.name || `Item Ref #${item.product_id || '?'}`,
+        sku: item.sku || item.product?.sku || "N/A", 
+        quantity: qty, 
+        unit_price: unitPrice, 
+        net_revenue: netRev, 
+        net_profit: netProf
       });
     }
 
@@ -57,7 +60,6 @@
 
   $: groupedBills = aggregateSalesData(salesHistory);
 
-  // --- 2. Chart Math ---
   function computeLiveChartData(bills: any[]) {
     const data = {
       day: [
@@ -123,7 +125,6 @@
   $: chartDataMap = computeLiveChartData(groupedBills);
   $: activeData = chartDataMap[activeFilter as keyof typeof chartDataMap];
   
-  // Dynamic Scaling
   $: maxRevenue = Math.max(...activeData.map((d: any) => d.revenue)) || 1; 
   $: maxProfit = Math.max(...activeData.map((d: any) => d.profit)) || 1; 
   
@@ -136,11 +137,10 @@
   function setFilter(filter: TimeFilter) { activeFilter = filter; }
   function toggleRow(billId: number) { expandedBillId = expandedBillId === billId ? null : billId; }
 
-  // LINE GENERATORS: Now we generate TWO lines instead of bars
   $: revLinePoints = activeData.map((d: any, i: number) => {
     const step = 800 / activeData.length;
     const x = (i * step) + (step / 2);
-    const y = 200 - (d.revenue / maxRevenue) * 180; // Scaled slightly to leave padding
+    const y = 200 - (d.revenue / maxRevenue) * 180;
     return `${x},${y}`;
   }).join(" ");
 
@@ -150,7 +150,6 @@
     const y = 200 - (d.profit / maxProfit) * 180; 
     return `${x},${y}`;
   }).join(" ");
-
 </script>
 
 <div class="page-view animate-fade-in">
@@ -171,7 +170,6 @@
     <div class="metric-viz-card chart-panel">
       <div class="chart-header">
         <span class="viz-label">Revenue vs Profit: {activeFilter}</span>
-        
         <div class="legend">
           <span class="legend-item"><div class="legend-line" style="background: #00bcd4;"></div> Revenue</span>
           <span class="legend-item"><div class="legend-line" style="background: #4caf50;"></div> Profit</span>
@@ -181,24 +179,12 @@
 
       <div class="svg-container" role="figure" on:mouseleave={() => hoveredData = null}>
         <svg viewBox="0 0 800 200" preserveAspectRatio="none" class="chart-svg">
-          
           <polyline points={revLinePoints} fill="none" stroke="#00bcd4" stroke-width="4" stroke-linejoin="round" />
           {#each activeData as d, i}
             {@const step = 800 / activeData.length}
             {@const xPos = (i * step) + (step / 2)}
             {@const yPos = 200 - (d.revenue / maxRevenue) * 180}
-            <circle 
-              cx={xPos} 
-              cy={yPos} 
-              r="5" 
-              fill="#1a1a21" 
-              stroke="#00bcd4" 
-              stroke-width="3" 
-              class="svg-dot"
-              role="graphics-symbol"
-              tabindex="-1"
-              on:mouseenter={() => hoveredData = d}
-            />
+            <circle cx={xPos} cy={yPos} r="5" fill="#1a1a21" stroke="#00bcd4" stroke-width="3" class="svg-dot" role="graphics-symbol" tabindex="-1" on:mouseenter={() => hoveredData = d} />
           {/each}
 
           <polyline points={profLinePoints} fill="none" stroke="#4caf50" stroke-width="4" stroke-linejoin="round" />
@@ -206,18 +192,7 @@
             {@const step = 800 / activeData.length}
             {@const xPos = (i * step) + (step / 2)}
             {@const yPos = 200 - (d.profit / maxProfit) * 180}
-            <circle 
-              cx={xPos} 
-              cy={yPos} 
-              r="5" 
-              fill="#1a1a21" 
-              stroke="#4caf50" 
-              stroke-width="3" 
-              class="svg-dot"
-              role="graphics-symbol"
-              tabindex="-1"
-              on:mouseenter={() => hoveredData = d}
-            />
+            <circle cx={xPos} cy={yPos} r="5" fill="#1a1a21" stroke="#4caf50" stroke-width="3" class="svg-dot" role="graphics-symbol" tabindex="-1" on:mouseenter={() => hoveredData = d} />
           {/each}
         </svg>
 
@@ -267,6 +242,7 @@
             <tr>
               <th style="width: 40px;"></th>
               <th>Invoice No.</th>
+              <th>Sale ID</th>
               <th>Customer Info</th>
               <th>Payment</th>
               <th class="text-right">Gross Total</th>
@@ -280,6 +256,7 @@
               <tr class="clickable-row {expandedBillId === bill.id ? 'active-row' : ''}" on:click={() => toggleRow(bill.id)}>
                 <td class="text-center text-muted expansion-arrow">{expandedBillId === bill.id ? "▼" : "▶"}</td>
                 <td class="invoice-number-text">{bill.bill_number}</td>
+                <td class="sale-id-text">#{bill.id}</td>
                 <td>
                   <div class="cust-title">{bill.customer_name}</div>
                   <div class="cust-subtitle">{bill.customer_phone}</div>
@@ -295,7 +272,7 @@
 
               {#if expandedBillId === bill.id}
                 <tr class="nested-expansion-wrapper">
-                  <td colspan="8">
+                  <td colspan="9">
                     <div class="expanded-details-drawer animate-slide-down">
                       <h4>Bill Breakdown</h4>
                       <table class="inner-details-table">
@@ -360,7 +337,6 @@
   .metric-viz-card h3 { margin: 12px 0 0 0; font-size: 28px; color: #ffffff; font-weight: 600; }
   .viz-label { font-size: 12px; color: #8e8e9a; text-transform: uppercase; font-weight: 600; letter-spacing: 0.8px; }
 
-  /* SVG Chart Layout - Redesigned for Lines */
   .chart-panel { display: flex; flex-direction: column; min-height: 280px; }
   .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
   .chart-total { font-size: 22px; font-weight: 700; color: #ffffff; }
@@ -391,7 +367,6 @@
   .upi-dot::before { background: #00bcd4; }
   .cash-dot::before { background: #ff9800; }
 
-  /* Table Styles */
   .panel-card { background: #1a1a21; border: 1px solid #292933; padding: 24px; border-radius: 12px; }
   .panel-title { font-size: 14px; font-weight: 600; color: #ffffff; margin-bottom: 24px; }
   .table-frame { overflow-x: auto; width: 100%; }
@@ -407,6 +382,7 @@
   .active-row { background: #202028; }
   
   .invoice-number-text { font-family: monospace; color: #e1e1e6; font-weight: 600; }
+  .sale-id-text { font-family: monospace; color: #00bcd4; font-weight: 600; }
   .cust-title { font-weight: 500; color: #ffffff; }
   .cust-subtitle { font-size: 12px; color: #8e8e9a; margin-top: 4px; }
   
