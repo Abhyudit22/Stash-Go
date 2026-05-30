@@ -20,9 +20,9 @@ app = FastAPI(
     title="Stash GO",
     version="1.0.0",
     lifespan=lifespan,
-    docs_url=None,
-    redoc_url=None,
-    openapi_url=None
+    # docs_url=None,
+    # redoc_url=None,
+    # openapi_url=None
 )
 
 app.add_middleware(
@@ -36,8 +36,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Application Routing Layout Tree Modules
 app.include_router(product_routes.router)
 app.include_router(sale_routes.router)
 app.include_router(analytics_routes.router)
