@@ -3,12 +3,13 @@
   import { 
     pingServer, getProduct, createProduct, adjustStock, deleteProduct, 
     createDraftBill, addItemToBill, updateBillDetails, finalizeBill, 
-    removeItemFromBill, // Controls deleting items from active draft
+    removeItemFromBill,
     getAllSales, getDashboardAnalytics, initiateProductReturn, getAllReturns,
-    deleteSaleBill // Controls deleting finalized bills from the ledger
+    deleteSaleBill
   } from "./lib/api";
   import type { Product, Bill } from "./lib/types"; 
 
+  import Landing from "./lib/Landing.svelte"; 
   import Login from "./lib/Login.svelte";
   import Dashboard from "./lib/Dashboard.svelte";
   import Inventory from "./lib/Inventory.svelte";
@@ -18,6 +19,7 @@
 
   let websiteName = "Stash GO";
   
+  let showLanding = $state(true); 
   let activePage = $state("dashboard"); 
   let backendStatus = $state("Connecting...");
   let products = $state<Product[]>([]);
@@ -36,16 +38,47 @@
 
   let activeBill: Bill | null = $state(null);
   let customerName = $state(""), customerPhone = $state(""), customerEmail = $state("");
-  let saleSku = $state(""); // Bound securely as a string
+  let saleSku = $state(""); 
   let saleQty = $state(1), billingDiscount = $state(0), billingTax = $state(0), paymentMethod = $state("Cash");
+
+  // --- NATIVE ROUTING SYSTEM ---
+  function navigate(page: string) {
+    activePage = page;
+    // Updates the browser URL without refreshing the page
+    window.history.pushState({ page }, "", `/${page}`);
+  }
+
+  function handleLaunch() {
+    showLanding = false;
+    window.history.pushState({ page: 'login' }, "", "/login");
+  }
 
   onMount(async () => {
     const data = await pingServer();
     backendStatus = data.status;
+    
     if (localStorage.getItem("token")) {
         isAuthenticated = true;
+        showLanding = false;
+        navigate("dashboard"); // Set URL to /dashboard automatically
         await refreshAllData();
+    } else {
+        // If no token, make sure URL is at root
+        window.history.pushState({}, "", "/");
     }
+
+    // Handle user clicking the "Back" button in their browser
+    window.addEventListener('popstate', (event) => {
+      if (event.state && event.state.page) {
+        if (event.state.page === 'login') {
+            showLanding = false;
+        } else {
+            activePage = event.state.page;
+        }
+      } else {
+        showLanding = true;
+      }
+    });
   });
 
   async function refreshAllData() {
@@ -126,7 +159,6 @@
   async function handleCheckoutAndFinalize() {
     if (!activeBill) return;
     
-    // Convert the UI % inputs into flat Rupee amounts for the backend
     const flatDiscountAmount = activeBill.subtotal * (billingDiscount / 100);
     const flatTaxAmount = activeBill.subtotal * (billingTax / 100);
 
@@ -168,53 +200,63 @@
   function handleLogout() { 
     localStorage.removeItem("token"); 
     isAuthenticated = false; 
-    location.reload(); 
+    showLanding = true; 
+    window.history.pushState({}, "", "/"); // Reset URL to root
   }
 </script>
 
-<div class="StashGo-Layout">
-  {#if !isAuthenticated}
-    <Login onLoginSuccess={() => { isAuthenticated = true; refreshAllData(); }} />
-  {:else}
-    <header>
-      <div class="header-brand">
-        <h1>{websiteName}</h1>
-        <span class="status-indicator {backendStatus === 'ok' ? 'online' : 'offline'}">
-          Backend: {backendStatus}
-        </span>
-      </div>
-      <nav>
-        <button class:active={activePage === "dashboard"} onclick={() => activePage = "dashboard"}>Dashboard</button>
-        <button class:active={activePage === "inventory"} onclick={() => activePage = "inventory"}>Inventory</button>
-        <button class:active={activePage === "counter"} onclick={() => activePage = "counter"}>Billing Counter</button>
-        <button class:active={activePage === "sales"} onclick={() => activePage = "sales"}>Sales Ledger</button>
-        <button class:active={activePage === "returns"} onclick={() => activePage = "returns"}>Returns</button>
-        <button class="btn-logout" onclick={handleLogout}>Logout</button>
-      </nav>
-    </header>
+{#if showLanding}
+  <Landing launchApp={handleLaunch} />
 
-    <main>
-      {#if activePage === "dashboard"}
-        <Dashboard {backendStatus} analyticsData={salesAnalytics} />
-      
-      {:else if activePage === "inventory"}
-        <Inventory {products} {handleAddProduct} {handleStockChange} {handleRemove} bind:newProduct />
-      
-      {:else if activePage === "counter"}
-        <Bills 
-          {products} {activeBill} {handleCreateBill} {handleAddItemToBill} {handleCheckoutAndFinalize} {handleRemoveItem}
-          bind:customerName bind:customerPhone bind:customerEmail bind:saleSku bind:saleQty bind:billingDiscount bind:billingTax bind:paymentMethod
-        />
-      
-      {:else if activePage === "sales"}
-        <Sales {salesHistory} {handleDeleteSale} />
-      
-      {:else if activePage === "returns"}
-        <Returns {returnsHistory} {handleProcessReturn} />
-      {/if}
-    </main>
-  {/if}
-</div>
+{:else}
+  <div class="StashGo-Layout">
+    {#if !isAuthenticated}
+      <Login onLoginSuccess={() => { 
+        isAuthenticated = true; 
+        navigate("dashboard");
+        refreshAllData(); 
+      }} />
+    {:else}
+      <header>
+        <div class="header-brand">
+          <h1>{websiteName}</h1>
+          <span class="status-indicator {backendStatus === 'ok' ? 'online' : 'offline'}">
+            Backend: {backendStatus}
+          </span>
+        </div>
+        <nav>
+          <button class:active={activePage === "dashboard"} onclick={() => navigate("dashboard")}>Dashboard</button>
+          <button class:active={activePage === "inventory"} onclick={() => navigate("inventory")}>Inventory</button>
+          <button class:active={activePage === "counter"} onclick={() => navigate("counter")}>Billing Counter</button>
+          <button class:active={activePage === "sales"} onclick={() => navigate("sales")}>Sales Ledger</button>
+          <button class:active={activePage === "returns"} onclick={() => navigate("returns")}>Returns</button>
+          <button class="btn-logout" onclick={handleLogout}>Logout</button>
+        </nav>
+      </header>
+
+      <main>
+        {#if activePage === "dashboard"}
+          <Dashboard {backendStatus} analyticsData={salesAnalytics} />
+        
+        {:else if activePage === "inventory"}
+          <Inventory {products} {handleAddProduct} {handleStockChange} {handleRemove} bind:newProduct />
+        
+        {:else if activePage === "counter"}
+          <Bills 
+            {products} {activeBill} {handleCreateBill} {handleAddItemToBill} {handleCheckoutAndFinalize} {handleRemoveItem}
+            bind:customerName bind:customerPhone bind:customerEmail bind:saleSku bind:saleQty bind:billingDiscount bind:billingTax bind:paymentMethod
+          />
+        
+        {:else if activePage === "sales"}
+          <Sales {salesHistory} {handleDeleteSale} />
+        
+        {:else if activePage === "returns"}
+          <Returns {returnsHistory} {handleProcessReturn} />
+        {/if}
+      </main>
+    {/if}
+  </div>
+{/if}
 
 <style>
   .StashGo-Layout { background-color: #121214; min-height: 100vh; min-width: max-content; color: #e1e1e6; font-family: system-ui, -apple-system, sans-serif; box-sizing: border-box; }
