@@ -1,0 +1,12 @@
+services:
+  stashgo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: stashgo_cloud_test
+    ports:
+      - "8000:7860"
+    # This automatically loads your SECRET_KEY and DATABASE_URL
+    # from the .env file inside your backend folder
+    env_file:
+      - ./backend/.env
