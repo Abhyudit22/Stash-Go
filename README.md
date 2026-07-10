@@ -1,3 +1,12 @@
+---
+title: Stash Go Backend
+emoji: 📦
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 7860
+pinned: false
+---
 # **📦 Stash GO**
 
 **A modern, high-performance Point-of-Sale (POS) and Inventory Management system tailored for shopkeepers and small businesses.**
