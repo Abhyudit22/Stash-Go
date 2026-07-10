@@ -1,4 +1,4 @@
-export const Base_URL = "http://127.0.0.1:8000";
+export const Base_URL = "https://abhyudit22-stash-go.hf.space";
 import type { Product } from "./types";
 
 export async function pingServer() {
