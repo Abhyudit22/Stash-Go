@@ -1,4 +1,4 @@
-export const Base_URL = "https://abhyudit22-stash-go.hf.space";
+export const Base_URL = "https://abhyudit-stash-go.hf.space";
 import type { Product } from "./types";
 
 export async function pingServer() {
