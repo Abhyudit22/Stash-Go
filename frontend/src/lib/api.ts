@@ -1,4 +1,6 @@
-export const Base_URL = "https://abhyudit-stash-go.hf.space";
+export const Base_URL = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+    ? "http://127.0.0.1:8000"
+    : "https://abhyudit-stash-go.hf.space";
 import type { Product } from "./types";
 import { toast } from "./toastStore";
 

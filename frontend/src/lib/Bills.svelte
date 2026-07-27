@@ -496,4 +496,47 @@
   .modal-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
   .btn-print { background: var(--accent-primary); color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; }
   .btn-close-modal { background: #e2e8f0; color: #334155; border: none; padding: 8px; border-radius: 6px; cursor: pointer; }
+
+  @media (max-width: 600px) {
+    .panel-card {
+      padding: 16px;
+    }
+    .field-row {
+      flex-direction: column;
+      gap: 10px;
+    }
+    .visual-picker-grid {
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 8px;
+    }
+    .visual-pick-card {
+      padding: 8px;
+    }
+    .pick-name {
+      font-size: 11px;
+    }
+    .pick-price {
+      font-size: 11px;
+    }
+    .pick-stock {
+      font-size: 10px;
+    }
+    table {
+      font-size: 11px;
+    }
+    th, td {
+      padding: 8px 6px;
+    }
+    .summary-grand {
+      font-size: 14px;
+    }
+    .grand-price {
+      font-size: 16px;
+    }
+    .modal-card {
+      width: 100%;
+      max-width: 320px;
+      padding: 16px;
+    }
+  }
 </style>
