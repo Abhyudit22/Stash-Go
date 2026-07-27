@@ -1,5 +1,6 @@
 export const Base_URL = "https://abhyudit-stash-go.hf.space";
 import type { Product } from "./types";
+import { toast } from "./toastStore";
 
 export async function pingServer() {
     try {
@@ -139,12 +140,14 @@ export async function addItemToBill(billId: number, itemData: { product_id: stri
         });
         if (!response.ok) {
             const err = await response.json();
-            alert(`Error: ${err.detail}`);
+            const detailMsg = typeof err.detail === 'string' ? err.detail : "Failed to append item.";
+            toast.error("Append Item Failed", detailMsg);
             return null;
         }
         return await response.json(); 
     } catch (error) {
         console.error("Error appending item:", error);
+        toast.error("Network Error", "Failed to connect to backend server.");
         return null;
     }
 }
@@ -179,12 +182,14 @@ export async function finalizeBill(billId: number) {
         });
         if (!response.ok) {
             const err = await response.json();
-            alert(`Finalize Error: ${err.detail}`);
+            const detailMsg = typeof err.detail === 'string' ? err.detail : "Failed to finalize invoice.";
+            toast.error("Finalize Error", detailMsg);
             return null;
         }
         return await response.json(); 
     } catch (error) {
         console.error("Error finalizing transaction:", error);
+        toast.error("Network Error", "Failed to connect to backend server.");
         return null;
     }
 }

@@ -127,6 +127,8 @@ def add_item_to_bill(
         "id": result.id,
         "bill_id": result.bill_id,
         "product_id": result.product_id,
+        "product_name": result.product_name,
+        "sku": result.sku,
         "quantity": result.quantity,
         "unit_price": result.unit_price,
         "total_price": result.total_price

@@ -14,8 +14,10 @@ def generate_bill_number(db: Session):
 def calculate_totals(bill: Bill):
     """Recalculate subtotal and grand total"""
     subtotal = sum(item.total_price for item in bill.items)
-    grand_total = subtotal - bill.discount + bill.tax
-    return subtotal, grand_total
+    discount_amt = bill.discount or 0.0
+    tax_amt = bill.tax or 0.0
+    grand_total = max(0.0, subtotal - discount_amt + tax_amt)
+    return round(subtotal, 2), round(grand_total, 2)
 
 def create_bill(db: Session, bill_data: BillCreate, user_id: int):
     """Create a new draft bill - with user isolation"""
@@ -51,32 +53,46 @@ def add_item_to_bill(db: Session, bill_id: int, item_data: BillItemCreate, user_
     if bill.status != "draft":
         return "bill_not_draft"
     
-    # FIXED: Pass user_id to ensure item belongs to this user
     product = product_crud.get_product_by_id(db, item_data.product_id, user_id)
     if not product:
         return "product_not_found"
     
-    if product.quantity_left < item_data.quantity:
-        return "insufficient_stock"
+    existing_item = db.query(BillItem).filter(
+        BillItem.bill_id == bill_id,
+        BillItem.product_id == item_data.product_id
+    ).first()
     
-    item_total = product.selling_price * item_data.quantity
+    if existing_item:
+        new_quantity = existing_item.quantity + item_data.quantity
+        if product.quantity_left < new_quantity:
+            return "insufficient_stock"
+        existing_item.quantity = new_quantity
+        existing_item.total_price = existing_item.quantity * product.selling_price
+        target_item = existing_item
+    else:
+        if product.quantity_left < item_data.quantity:
+            return "insufficient_stock"
+        
+        item_total = product.selling_price * item_data.quantity
+        bill_item = BillItem(
+            bill_id=bill_id,
+            product_id=item_data.product_id,
+            quantity=item_data.quantity,
+            unit_price=product.selling_price,
+            total_price=item_total
+        )
+        db.add(bill_item)
+        target_item = bill_item
     
-    bill_item = BillItem(
-        bill_id=bill_id,
-        product_id=item_data.product_id,
-        quantity=item_data.quantity,
-        unit_price=product.selling_price,
-        total_price=item_total
-    )
-    
-    db.add(bill_item)
-    
+    db.flush()
+    db.refresh(bill)
     bill.subtotal, bill.grand_total = calculate_totals(bill)
     
     db.commit()
-    db.refresh(bill_item)
+    db.refresh(target_item)
+    db.refresh(bill)
     
-    return bill_item
+    return target_item
 
 def remove_item_from_bill(db: Session, bill_id: int, item_id: int, user_id: int):
     bill = db.query(Bill).filter(Bill.id == bill_id).first()
@@ -92,6 +108,8 @@ def remove_item_from_bill(db: Session, bill_id: int, item_id: int, user_id: int)
         return "item_not_found"
     
     db.delete(item)
+    db.flush()
+    db.refresh(bill)
     bill.subtotal, bill.grand_total = calculate_totals(bill)
     
     db.commit()
@@ -113,6 +131,8 @@ def update_bill_details(db: Session, bill_id: int, bill_update: BillUpdate, user
     if bill_update.tax is not None: bill.tax = bill_update.tax
     if bill_update.payment_method is not None: bill.payment_method = bill_update.payment_method
     
+    db.flush()
+    db.refresh(bill)
     bill.subtotal, bill.grand_total = calculate_totals(bill)
     
     db.commit()

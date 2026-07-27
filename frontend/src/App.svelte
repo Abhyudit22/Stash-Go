@@ -185,6 +185,14 @@
 
   async function handleAddItemToBill() {
     if (!activeBill) return;
+    if (!saleSku) {
+      toast.warning("Select Product", "Please select a product from the list or picker before appending.");
+      return;
+    }
+    if (!saleQty || saleQty < 1) {
+      toast.warning("Invalid Quantity", "Item quantity must be at least 1.");
+      return;
+    }
     
     const updatedItem = await addItemToBill(activeBill.id, { 
       product_id: String(Number(saleSku)), 
@@ -193,10 +201,9 @@
     
     if (updatedItem) { 
       await refreshActiveBill();
+      toast.success("Item Appended", "Product line item has been added to invoice draft.");
       saleSku = ""; 
       saleQty = 1; 
-    } else {
-      alert("Failed to append item.");
     }
   }
 
@@ -206,8 +213,9 @@
     const successMessage = await removeItemFromBill(activeBill.id, itemId);
     if (successMessage) {
       await refreshActiveBill();
+      toast.info("Item Removed", "Line item has been removed from invoice draft.");
     } else {
-      alert("Failed to remove item.");
+      toast.error("Remove Item Failed", "Could not remove item from draft invoice.");
     }
   }
 
