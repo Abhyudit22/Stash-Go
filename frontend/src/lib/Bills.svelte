@@ -141,7 +141,10 @@
               type="button"
               class="visual-pick-card" 
               class:selected={saleSku === String(product.id)}
-              onclick={() => saleSku = String(product.id)}
+              onclick={() => {
+                saleSku = String(product.id);
+                handleAddItemToBill();
+              }}
             >
               <span class="pick-name">{product.name}</span>
               <span class="pick-meta">SKU: {product.sku}</span>
