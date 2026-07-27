@@ -37,19 +37,7 @@ def create_bill(
     }
 
 
-@router.get("/{bill_id}", response_model=dict)
-def get_bill(
-    bill_id: int,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
-):
-    """Get a specific bill with items"""
-    # ← FIXED: Pass user_id for validation
-    bill = bill_crud.get_bill(db, bill_id, current_user.id)
-    
-    if not bill:
-        raise HTTPException(status_code=404, detail="Bill not found")
-    
+def format_bill_dict(bill: Bill) -> dict:
     return {
         "id": bill.id,
         "bill_number": bill.bill_number,
@@ -74,9 +62,24 @@ def get_bill(
                 "unit_price": item.unit_price,
                 "total_price": item.total_price
             }
-            for item in bill.items
+            for item in (bill.items or [])
         ]
     }
+
+
+@router.get("/{bill_id}", response_model=dict)
+def get_bill(
+    bill_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Get a specific bill with items"""
+    bill = bill_crud.get_bill(db, bill_id, current_user.id)
+    
+    if not bill:
+        raise HTTPException(status_code=404, detail="Bill not found")
+    
+    return format_bill_dict(bill)
 
 
 @router.get("/", response_model=list[dict])
@@ -85,7 +88,6 @@ def get_all_bills(
     current_user = Depends(get_current_user)
 ):
     """Get all bills for the logged-in user"""
-    # ← FIXED: Pass user_id
     bills = bill_crud.get_all_bills(db, current_user.id)
     
     result = []
@@ -116,23 +118,14 @@ def add_item_to_bill(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
-    """Add an item to a bill"""
-    # ← FIXED: Pass user_id
+    """Add an item to a bill and return updated bill"""
     result = bill_crud.add_item_to_bill(db, bill_id, item_data, current_user.id)
     
     if isinstance(result, str):
         raise HTTPException(status_code=400, detail=result)
     
-    return {
-        "id": result.id,
-        "bill_id": result.bill_id,
-        "product_id": result.product_id,
-        "product_name": result.product_name,
-        "sku": result.sku,
-        "quantity": result.quantity,
-        "unit_price": result.unit_price,
-        "total_price": result.total_price
-    }
+    updated_bill = bill_crud.get_bill(db, bill_id, current_user.id)
+    return format_bill_dict(updated_bill)
 
 
 @router.delete("/{bill_id}/items/{item_id}", response_model=dict)
@@ -142,14 +135,14 @@ def remove_item_from_bill(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
-    """Remove an item from a bill"""
-    # ← FIXED: Pass user_id
+    """Remove an item from a bill and return updated bill"""
     result = bill_crud.remove_item_from_bill(db, bill_id, item_id, current_user.id)
     
     if isinstance(result, str) and result != "item_removed":
         raise HTTPException(status_code=400, detail=result)
     
-    return {"message": "Item removed successfully"}
+    updated_bill = bill_crud.get_bill(db, bill_id, current_user.id)
+    return format_bill_dict(updated_bill)
 
 
 @router.put("/{bill_id}", response_model=dict)

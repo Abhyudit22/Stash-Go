@@ -188,13 +188,13 @@
       return;
     }
     
-    const updatedItem = await addItemToBill(activeBill.id, { 
+    const updatedBill = await addItemToBill(activeBill.id, { 
       product_id: String(Number(saleSku)), 
       quantity: Number(saleQty) 
     });
     
-    if (updatedItem) { 
-      await refreshActiveBill();
+    if (updatedBill) { 
+      activeBill = updatedBill as Bill;
       toast.success("Item Appended", "Product line item has been added to invoice draft.");
       saleSku = ""; 
       saleQty = 1; 
@@ -204,9 +204,9 @@
   async function handleRemoveItem(itemId: number) {
     if (!activeBill) return;
     
-    const successMessage = await removeItemFromBill(activeBill.id, itemId);
-    if (successMessage) {
-      await refreshActiveBill();
+    const updatedBill = await removeItemFromBill(activeBill.id, itemId);
+    if (updatedBill) {
+      activeBill = updatedBill as Bill;
       toast.info("Item Removed", "Line item has been removed from invoice draft.");
     } else {
       toast.error("Remove Item Failed", "Could not remove item from draft invoice.");
