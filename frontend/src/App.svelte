@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import { 
     pingServer, getProduct, createProduct, adjustStock, deleteProduct, 
-    createDraftBill, addItemToBill, updateBillDetails, finalizeBill, 
+    createDraftBill, getBillById, addItemToBill, updateBillDetails, finalizeBill, 
     removeItemFromBill,
     getAllSales, getDashboardAnalytics, initiateProductReturn, getAllReturns,
     deleteSaleBill
@@ -163,15 +163,9 @@
   async function refreshActiveBill(): Promise<void> {
     if (!activeBill) return;
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`http://127.0.0.1:8000/bills/${activeBill.id}`, {
-        headers: { 
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      });
-      if (res.ok) {
-        activeBill = (await res.json()) as Bill; 
+      const updatedBill = await getBillById(activeBill.id);
+      if (updatedBill) {
+        activeBill = updatedBill as Bill; 
       }
     } catch (err) {
       console.error("Failed to refresh bill", err);

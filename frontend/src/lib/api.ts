@@ -127,6 +127,24 @@ export async function createDraftBill(customerData: { customer_name: string; cus
     }
 }
 
+export async function getBillById(billId: number) {
+    try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(`${Base_URL}/bills/${billId}`, {
+            method: "GET",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            }
+        });
+        if (!response.ok) return null;
+        return await response.json();
+    } catch (error) {
+        console.error("Error fetching bill by ID:", error);
+        return null;
+    }
+}
+
 export async function addItemToBill(billId: number, itemData: { product_id: string; quantity: number }) {
     try {
         const token = localStorage.getItem("token");
