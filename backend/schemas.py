@@ -142,6 +142,11 @@ class UserCreate(BaseModel):
     password: str
 
 
+class PasswordReset(BaseModel):
+    email: str
+    new_password: str
+
+
 class UserLogin(BaseModel):
     username: str
     password: str

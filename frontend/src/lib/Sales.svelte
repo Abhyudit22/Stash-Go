@@ -5,7 +5,6 @@
   type TimeFilter = 'day' | 'week' | 'month' | 'year';
   let activeFilter: TimeFilter = 'day';
   let expandedBillId: number | null = null;
-  let hoveredData: any = null; 
 
   function aggregateSalesData(records: any[]) {
     if (!records || records.length === 0) return [];
@@ -171,10 +170,10 @@
   }).join(" ");
 </script>
 
-<div class="page-view">
+<div class="page-view animate-fade-in">
   <div class="header-flex">
     <div class="header-text">
-      <h2>SALES LEDGER & ANALYTICS</h2>
+      <h2 class="gradient-text-header">SALES LEDGER & ANALYTICS</h2>
       <p class="subtitle">Real-time transaction history with revenue and profit metrics.</p>
     </div>
     <div class="filter-tabs">
@@ -193,17 +192,17 @@
     <div class="analytics-viz-grid">
       <div class="metric-viz-card">
         <svg class="chart-svg" viewBox="0 0 800 220" xmlns="http://www.w3.org/2000/svg">
-          <line x1="0" y1="200" x2="800" y2="200" stroke="#292933" stroke-width="1" />
-          <line x1="0" y1="100" x2="800" y2="100" stroke="#292933" stroke-width="0.5" opacity="0.5" />
-          <polyline points={revLinePoints} fill="none" stroke="#00bcd4" stroke-width="3" />
-          <polyline points={profLinePoints} fill="none" stroke="#4caf50" stroke-width="3" />
+          <line x1="0" y1="200" x2="800" y2="200" stroke="rgba(255,255,255,0.1)" stroke-width="1" />
+          <line x1="0" y1="100" x2="800" y2="100" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
+          <polyline points={revLinePoints} fill="none" stroke="var(--accent-cyan)" stroke-width="3" />
+          <polyline points={profLinePoints} fill="none" stroke="var(--accent-success)" stroke-width="3" />
           
           {#each activeData as point, idx}
             <circle
               cx={(idx * (800 / activeData.length)) + (800 / (2 * activeData.length))}
               cy={200 - (point.revenue / maxRevenue) * 180}
               r="4"
-              fill="#00bcd4"
+              fill="var(--accent-cyan)"
               stroke="#ffffff"
               stroke-width="2"
               class="svg-dot"
@@ -215,7 +214,7 @@
               cx={(idx * (800 / activeData.length)) + (800 / (2 * activeData.length))}
               cy={200 - (point.profit / maxProfit) * 180}
               r="4"
-              fill="#4caf50"
+              fill="var(--accent-success)"
               stroke="#ffffff"
               stroke-width="2"
               class="svg-dot"
@@ -231,15 +230,17 @@
       </div>
 
       <div class="mini-widgets-col">
-        <div class="metric-viz-card mini-card">
+        <div class="metric-viz-card mini-card cyan-border">
           <div class="viz-label">Total Period Sales</div>
           <h3>₹{totalPeriodSales.toFixed(2)}</h3>
         </div>
-        <div class="metric-viz-card mini-card">
+
+        <div class="metric-viz-card mini-card green-border">
           <div class="viz-label">Net Profit</div>
           <h3>₹{totalProfit.toFixed(2)}</h3>
         </div>
-        <div class="metric-viz-card mini-card">
+
+        <div class="metric-viz-card mini-card indigo-border">
           <div class="viz-label">Payment Breakdown</div>
           <div class="payment-ratio-bar">
             {#if upiCount > 0 || cashCount > 0}
@@ -248,8 +249,8 @@
             {/if}
           </div>
           <div class="ratio-legends">
-            <div class="dot-legend upi-dot">UPI: {upiCount} transactions</div>
-            <div class="dot-legend cash-dot">Cash: {cashCount} transactions</div>
+            <div class="dot-legend upi-dot">UPI: {upiCount} txns</div>
+            <div class="dot-legend cash-dot">Cash: {cashCount} txns</div>
           </div>
         </div>
       </div>
@@ -257,7 +258,7 @@
 
     {#if groupedBills.length > 0}
       <div class="panel-card">
-        <div class="panel-title">Transaction History</div>
+        <div class="panel-title text-cyan">Transaction History Ledger</div>
         <div class="table-frame">
           <table>
             <thead>
@@ -276,17 +277,17 @@
             <tbody>
               {#each groupedBills as bill}
                 <tr class="clickable-row" class:active-row={expandedBillId === bill.id} on:click={() => toggleRow(bill.id)}>
-                  <td><span class="invoice-number-text">{bill.bill_number}</span></td>
+                  <td><span class="invoice-number-text text-cyan">{bill.bill_number}</span></td>
                   <td>
-                    <div class="cust-title">{bill.customer_name}</div>
+                    <div class="cust-title text-white">{bill.customer_name}</div>
                     <div class="cust-subtitle">{bill.customer_phone}</div>
                   </td>
                   <td>{formatDateTime(bill.created_at)}</td>
                   <td class="text-center">{bill.items.length}</td>
                   <td class="text-right">₹{bill.subtotal.toFixed(2)}</td>
-                  <td class="text-right text-red">₹{bill.discount.toFixed(2)}</td>
-                  <td class="text-right text-bold">₹{bill.total_bill_amount.toFixed(2)}</td>
-                  <td class="text-right text-green">₹{bill.total_profit.toFixed(2)}</td>
+                  <td class="text-right text-amber">₹{bill.discount.toFixed(2)}</td>
+                  <td class="text-right text-bold text-white">₹{bill.total_bill_amount.toFixed(2)}</td>
+                  <td class="text-right text-green font-bold">₹{bill.total_profit.toFixed(2)}</td>
                   <td>
                     <div style="display: flex; gap: 8px; align-items: center;">
                       <span class="badge-status-finalized">FINALIZED</span>
@@ -300,7 +301,7 @@
                   <tr class="nested-expansion-wrapper">
                     <td colspan="9">
                       <div class="expanded-details-drawer animate-slide-down">
-                        <h4>Bill Breakdown</h4>
+                        <h4>Bill Breakdown Details</h4>
                         <table class="inner-details-table">
                           <thead>
                             <tr>
@@ -329,7 +330,7 @@
                         </table>
                         <div class="expanded-summary-footer">
                           <div class="summary-line"><span>Subtotal:</span> <span>₹{bill.subtotal.toFixed(2)}</span></div>
-                          {#if bill.discount > 0}<div class="summary-line text-red"><span>Discount:</span> <span>- ₹{bill.discount.toFixed(2)}</span></div>{/if}
+                          {#if bill.discount > 0}<div class="summary-line text-amber"><span>Discount:</span> <span>- ₹{bill.discount.toFixed(2)}</span></div>{/if}
                           {#if bill.tax > 0}<div class="summary-line text-cyan"><span>Tax:</span> <span>+ ₹{bill.tax.toFixed(2)}</span></div>{/if}
                         </div>
                       </div>
@@ -346,84 +347,145 @@
 </div>
 
 <style>
-  .page-view { padding: 10px; color: #e1e1e6; }
-  .header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-  .header-text h2 { font-size: 24px; font-weight: 600; color: #ffffff; margin: 0 0 4px 0; }
-  .subtitle { font-size: 14px; color: #8e8e9a; margin: 0; }
+  .page-view { color: var(--text-main); }
+  .header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 15px; }
+  .header-text h2 { font-size: 24px; margin: 0 0 4px 0; color: var(--accent-primary); }
+  .subtitle { font-size: 14px; color: var(--text-muted); margin: 0; }
 
-  .filter-tabs { display: flex; background: #18181f; border-radius: 8px; padding: 4px; border: 1px solid #292933; }
-  .filter-tabs button { background: transparent; border: none; color: #8e8e9a; padding: 8px 16px; font-size: 13px; font-weight: 500; cursor: pointer; border-radius: 6px; transition: 0.2s ease; }
-  .filter-tabs button:hover { color: #ffffff; }
-  .filter-tabs button.active { background: #262631; color: #00bcd4; }
+  .filter-tabs {
+    display: flex;
+    background: #e2e8f0;
+    border-radius: 20px;
+    padding: 4px;
+    border: 1px solid var(--border-light);
+  }
 
-  .analytics-viz-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 32px; }
-  .mini-widgets-col { display: flex; flex-direction: column; gap: 24px; }
+  .filter-tabs button {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: 6px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    border-radius: 16px;
+    transition: all 0.2s ease;
+  }
+
+  .filter-tabs button:hover { color: var(--accent-primary); }
+  .filter-tabs button.active {
+    background: var(--accent-primary);
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(15, 90, 71, 0.25);
+  }
+
+  .analytics-viz-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 24px; }
+
+  @media (max-width: 900px) {
+    .analytics-viz-grid { grid-template-columns: 1fr; }
+  }
+
+  .mini-widgets-col { display: flex; flex-direction: column; gap: 16px; }
   
-  .metric-viz-card { background: #1a1a21; border: 1px solid #292933; padding: 24px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+  .metric-viz-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    padding: 20px;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .cyan-border { border-left: 4px solid var(--accent-secondary); }
+  .green-border { border-left: 4px solid #047857; }
+  .indigo-border { border-left: 4px solid var(--accent-primary); }
+
   .mini-card { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-  .metric-viz-card h3 { margin: 12px 0 0 0; font-size: 28px; color: #ffffff; font-weight: 600; }
-  .viz-label { font-size: 12px; color: #8e8e9a; text-transform: uppercase; font-weight: 600; letter-spacing: 0.8px; }
+  .metric-viz-card h3 { margin: 6px 0 0 0; font-size: 24px; color: var(--text-main); font-weight: 800; }
+  .viz-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.8px; }
 
   .chart-svg { width: 100%; height: 100%; overflow: visible; }
-  .svg-dot { transition: r 0.2s, fill 0.2s, stroke-width 0.2s; cursor: pointer; }
-  .svg-dot:hover { r: 8; fill: #ffffff; stroke-width: 4; }
+  .svg-dot { transition: all 0.2s; cursor: pointer; }
+  .svg-dot:hover { r: 7; fill: var(--accent-primary); }
 
-  .axis-labels { display: flex; justify-content: space-around; width: 100%; font-size: 11px; color: #8e8e9a; font-weight: 500; padding: 0 10px; }
+  .axis-labels { display: flex; justify-content: space-around; width: 100%; font-size: 11px; color: var(--text-muted); font-weight: 600; padding: 0 10px; }
   
-  .payment-ratio-bar { height: 8px; border-radius: 4px; display: flex; overflow: hidden; margin-top: 16px; background: #202028; }
-  .segment.upi { background: #00bcd4; }
-  .segment.cash { background: #ff9800; }
-  .ratio-legends { display: flex; gap: 16px; margin-top: 12px; }
-  .dot-legend { font-size: 12px; color: #a1a1aa; display: flex; align-items: center; gap: 6px; }
+  .payment-ratio-bar { height: 8px; border-radius: 4px; display: flex; overflow: hidden; margin-top: 12px; background: var(--bg-card-hover); }
+  .segment.upi { background: var(--accent-secondary); }
+  .segment.cash { background: var(--accent-warning); }
+  .ratio-legends { display: flex; gap: 16px; margin-top: 10px; }
+  .dot-legend { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
   .dot-legend::before { content: ''; width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-  .upi-dot::before { background: #00bcd4; }
-  .cash-dot::before { background: #ff9800; }
+  .upi-dot::before { background: var(--accent-secondary); }
+  .cash-dot::before { background: var(--accent-warning); }
 
-  .panel-card { background: #1a1a21; border: 1px solid #292933; padding: 24px; border-radius: 12px; }
-  .panel-title { font-size: 14px; font-weight: 600; color: #ffffff; margin-bottom: 24px; }
+  .panel-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    padding: 24px;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .panel-title { font-size: 14px; font-weight: 800; text-transform: uppercase; margin-bottom: 20px; letter-spacing: 0.8px; color: var(--accent-primary); }
   .table-frame { overflow-x: auto; width: 100%; }
   
   table { width: 100%; border-collapse: separate; border-spacing: 0; }
-  th { background: #202028; color: #8e8e9a; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; padding: 14px 16px; text-align: left; font-weight: 600; }
-  td { padding: 16px; border-bottom: 1px solid #202028; font-size: 14px; color: #a1a1aa; vertical-align: middle; }
+  th { background: var(--bg-card-hover); color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 16px; text-align: left; font-weight: 700; border-bottom: 1px solid var(--border-light); }
+  td { padding: 14px 16px; border-bottom: 1px solid var(--border-light); font-size: 14px; color: var(--text-main); vertical-align: middle; }
   
   .clickable-row { cursor: pointer; transition: background 0.2s ease; }
-  .clickable-row:hover { background: #202028; }
-  .active-row { background: #202028; }
+  .clickable-row:hover { background: var(--bg-card-hover); }
+  .active-row { background: rgba(15, 90, 71, 0.05); }
   
-  .invoice-number-text { font-family: monospace; color: #e1e1e6; font-weight: 600; }
-  .cust-title { font-weight: 500; color: #ffffff; }
-  .cust-subtitle { font-size: 12px; color: #8e8e9a; margin-top: 4px; }
+  .invoice-number-text { font-family: monospace; font-weight: 700; color: var(--accent-primary); }
+  .cust-title { font-weight: 600; color: var(--text-main); }
+  .cust-subtitle { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
   
-  .badge-status-finalized { background: rgba(76, 175, 80, 0.1); color: #4caf50; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; border: 1px solid rgba(76, 175, 80, 0.2); }
+  .badge-status-finalized {
+    background: rgba(16, 185, 129, 0.12);
+    color: #047857;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    border: 1px solid rgba(16, 185, 129, 0.25);
+  }
   
-  /* Re-added delete button styles */
-  .btn-delete-row { background: rgba(255, 82, 82, 0.1); border: 1px solid rgba(255, 82, 82, 0.3); color: #ff5252; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
-  .btn-delete-row:hover { background: #ff5252; color: #ffffff; }
+  .btn-delete-row {
+    background: rgba(225, 29, 72, 0.08);
+    border: 1px solid rgba(225, 29, 72, 0.2);
+    color: var(--accent-danger);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-delete-row:hover { background: var(--accent-danger); color: #ffffff; }
 
   .nested-expansion-wrapper td { padding: 0 !important; border-bottom: none; }
-  .expanded-details-drawer { padding: 24px; background: #15151a; border-radius: 0 0 8px 8px; box-shadow: inset 0 4px 12px rgba(0,0,0,0.1); }
-  .expanded-details-drawer h4 { margin: 0 0 16px 0; font-size: 13px; font-weight: 600; color: #e1e1e6; }
+  .expanded-details-drawer { padding: 20px; background: var(--bg-card-hover); border-radius: 0 0 10px 10px; border-top: 1px solid var(--border-light); }
+  .expanded-details-drawer h4 { margin: 0 0 14px 0; font-size: 13px; font-weight: 700; color: var(--accent-primary); }
   
-  .inner-details-table th { background: transparent; color: #7c7c8a; border-bottom: 1px solid #292933; border-radius: 0; padding: 10px 0; }
-  .inner-details-table td { padding: 12px 0; border-bottom: 1px dashed #292933; font-size: 13px; color: #8e8e9a; }
+  .inner-details-table th { background: transparent; color: var(--text-muted); border-bottom: 1px solid var(--border-light); padding: 8px 0; }
+  .inner-details-table td { padding: 10px 0; border-bottom: 1px dashed var(--border-light); font-size: 13px; color: var(--text-main); }
   
-  .font-medium { font-weight: 500; }
-  .sku-sub-text { font-family: monospace; color: #8e8e9a; font-size: 12px; }
-  .expanded-summary-footer { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; margin-top: 16px; padding-top: 16px; border-top: 1px solid #292933; }
-  .summary-line { display: flex; justify-content: space-between; width: 250px; font-size: 13px; color: #a1a1aa; }
-  .summary-line span:last-child { font-weight: 600; font-family: monospace; color: #ffffff; }
+  .font-medium { font-weight: 600; }
+  .sku-sub-text { font-family: monospace; color: var(--text-muted); font-size: 12px; }
+  .expanded-summary-footer { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border-light); }
+  .summary-line { display: flex; justify-content: space-between; width: 250px; font-size: 13px; color: var(--text-muted); }
+  .summary-line span:last-child { font-weight: 700; font-family: monospace; color: var(--text-main); }
 
   .text-center { text-align: center; }
   .text-right { text-align: right; }
-  .text-bold { font-weight: 600; }
-  .text-green { color: #4caf50; }
-  .text-cyan { color: #00bcd4; }
-  .text-red { color: #ff5252; }
-  .text-white { color: #ffffff; }
-  .text-muted { color: #7c7c8a; }
+  .text-bold { font-weight: 700; }
+  .text-green { color: #047857; }
+  .text-cyan { color: var(--accent-secondary); }
+  .text-amber { color: var(--accent-warning); }
+  .text-white { color: var(--text-main); }
+  .text-muted { color: var(--text-muted); }
   
-  .empty-box { text-align: center; color: #7c7c8a; padding: 40px; border: 1px dashed #3a3a47; border-radius: 8px; }
-  @keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
-  .animate-slide-down { animation: slideDown 0.2s ease-out; }
+  .empty-box { text-align: center; color: var(--text-muted); padding: 40px; border: 1px dashed var(--border-light); border-radius: var(--radius-sm); }
 </style>

@@ -15,10 +15,10 @@
   }
 </script>
 
-<div class="page-view animate-fade">
+<div class="page-view animate-fade-in">
   <div class="terminal-header">
     <div>
-      <h2>RETURNS & REVERSAL WORKSPACE</h2>
+      <h2 class="gradient-text-header">RETURNS & REVERSAL WORKSPACE</h2>
       <p class="subtitle">Process inventory intake reversals, balance gross revenue sheets, and verify matching references.</p>
     </div>
     <div class="terminal-badge">Total Returns Logged: {returnsHistory.length}</div>
@@ -26,7 +26,7 @@
 
   <div class="checkout-layout-grid">
     <div class="panel-card">
-      <div class="panel-title">Initiate Product Return</div>
+      <div class="panel-title text-amber">Initiate Product Return</div>
       <form on:submit|preventDefault={localSubmit} class="stacked-form">
         <div class="field-row">
           <div class="field-group">
@@ -56,7 +56,7 @@
     </div>
 
     <div class="panel-card dark-bg">
-      <div class="panel-title text-orange">Returns Audit Ledger</div>
+      <div class="panel-title text-amber">Returns Audit Ledger</div>
       <div class="audit-stream">
         {#if returnsHistory.length === 0}
           <div class="placeholder-text">
@@ -66,12 +66,12 @@
           {#each returnsHistory as ret}
             <div class="audit-card">
               <div class="audit-header">
-                <span>Return Registry #{ret.id}</span>
+                <span class="text-white">Return Registry #{ret.id}</span>
                 <span class="text-muted">Origin Sale: #{ret.sale_id}</span>
               </div>
               <div class="audit-body">
                 <p><strong>Product Line:</strong> {ret.product_name || ret.product_id}</p>
-                <p><strong>Quantity Returned:</strong> <span class="text-orange">{ret.quantity} items</span></p>
+                <p><strong>Quantity Returned:</strong> <span class="text-amber">{ret.quantity} items</span></p>
                 <p class="reason-quote">" {ret.reason || 'No explanation specified.'} "</p>
               </div>
             </div>
@@ -83,48 +83,97 @@
 </div>
 
 <style>
-  
-  .terminal-header, .audit-header, .field-row {
+  .terminal-header, .audit-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
-  .terminal-header { margin-bottom: 30px; }
-  .page-view h2 { color: #ffffff; font-size: 22px; margin: 0 0 6px 0; border-left: 4px solid #ff9800; padding-left: 12px; }
-  .subtitle { color: #8e8e9a; font-size: 14px; margin: 0; }
+  .terminal-header { margin-bottom: 24px; flex-wrap: wrap; gap: 15px; }
+  .page-view h2 { font-size: 24px; margin: 0 0 4px 0; color: var(--accent-primary); }
+  .subtitle { color: var(--text-muted); font-size: 14px; margin: 0; }
   
-  .terminal-badge { 
-    background: #1e1e24; border: 1px solid #29292e; color: #ff9800; 
-    padding: 6px 14px; border-radius: 4px; font-size: 13px; font-weight: bold; 
+  .terminal-badge {
+    background: rgba(217, 119, 6, 0.1);
+    border: 1px solid rgba(217, 119, 6, 0.25);
+    color: var(--accent-warning);
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
   }
 
-  .checkout-layout-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 30px; width: 100%; }
-  .panel-card { background: #1e1e24; border: 1px solid #29292e; padding: 30px; border-radius: 8px; box-sizing: border-box; display: flex; flex-direction: column; }
-  .panel-card.dark-bg { background: #15151a; }
-  .panel-title { font-size: 14px; font-weight: bold; text-transform: uppercase; color: #ff9800; letter-spacing: 0.8px; margin-bottom: 20px; border-bottom: 1px solid #29292e; padding-bottom: 8px; }
+  .checkout-layout-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 24px; width: 100%; }
+
+  @media (max-width: 900px) {
+    .checkout-layout-grid { grid-template-columns: 1fr; }
+  }
+  
+  .panel-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    padding: 24px;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .panel-card.dark-bg { background: var(--bg-card-hover); }
+  .panel-title { font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 20px; border-bottom: 1px solid var(--border-light); padding-bottom: 8px; color: var(--accent-warning); }
 
   .stacked-form, .audit-stream, .audit-card { display: flex; flex-direction: column; }
   .stacked-form { gap: 16px; }
-  .field-row { gap: 16px; width: 100%; }
+  .field-row { display: flex; gap: 16px; width: 100%; }
   .field-group { flex: 1; }
-  .field-group label { display: block; font-size: 13px; color: #b0bec5; margin-bottom: 8px; }
+  .field-group label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 6px; font-weight: 600; }
 
-  input, select { background: #2a2a35; border: 1px solid #3a3a47; padding: 12px; color: white; border-radius: 4px; font-size: 14px; width: 100%; box-sizing: border-box; }
-  input:focus, select:focus { outline: none; border-color: #ff9800; }
+  input, select {
+    background: var(--bg-input);
+    border: 1px solid var(--border-solid);
+    padding: 10px 12px;
+    color: var(--text-main);
+    border-radius: 8px;
+    font-size: 14px;
+    width: 100%;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+  }
+
+  input:focus, select:focus { outline: none; border-color: var(--accent-warning); box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.12); }
   
-  .btn-return { border: none; padding: 14px; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 14px; text-transform: uppercase; background: #ff9800; color: #121214; transition: background 0.2s; }
-  .btn-return:hover { background: #e68a00; }
+  .btn-return {
+    border: none;
+    padding: 12px;
+    font-weight: 700;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    text-transform: uppercase;
+    background: var(--accent-warning);
+    color: #ffffff;
+    transition: transform 0.2s ease;
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.25);
+  }
+
+  .btn-return:hover { transform: translateY(-1px); }
 
   .audit-stream { gap: 14px; max-height: 420px; overflow-y: auto; }
-  .audit-card { background: #1e1e24; border: 1px solid #29292e; border-radius: 6px; padding: 16px; border-left: 4px solid #ff9800; }
-  .audit-header { font-size: 12px; font-weight: bold; margin-bottom: 10px; color: #ffffff; }
-  .audit-body p { margin: 4px 0; font-size: 13px; color: #b0bec5; }
-
-  .text-orange { color: #ff9800; font-weight: bold; }
-  .text-muted { color: #8e8e9a; }
-  .reason-quote { font-style: italic; color: #7c7c8a; margin-top: 8px !important; }
-  .placeholder-text { text-align: center; color: #7c7c8a; font-size: 14px; padding: 40px 0; }
   
-  .animate-fade { animation: fadeIn 0.25s ease-out forwards; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+  .audit-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    border-left: 4px solid var(--accent-warning);
+  }
+
+  .audit-header { font-size: 12px; font-weight: 700; margin-bottom: 10px; }
+  .audit-body p { margin: 4px 0; font-size: 13px; color: var(--text-muted); }
+
+  .text-amber { color: var(--accent-warning); font-weight: 700; }
+  .text-muted { color: var(--text-muted); }
+  .text-white { color: var(--text-main); font-weight: 700; }
+  .reason-quote { font-style: italic; color: var(--text-muted); margin-top: 8px !important; }
+  .placeholder-text { text-align: center; color: var(--text-muted); font-size: 14px; padding: 40px 0; }
 </style>

@@ -4,14 +4,14 @@ from sqlalchemy.orm import Session
 from datetime import timedelta
 from database import get_db
 from crud import auth_crud
-from schemas import UserCreate, UserResponse, Token
+from schemas import UserCreate, UserResponse, Token, PasswordReset
 from utils.auth import authenticate_user, create_access_token, get_current_user, ACCESS_TOKEN_EXPIRE_MINUTES
+from utils.rate_limiter import limit_auth_requests
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
-# 👇 THIS IS THE ONLY LINE THAT CHANGED (Swapped "/register" for "/signup") 👇
 @router.post("/signup", response_model=UserResponse)
-def register(user_auth: UserCreate, db: Session = Depends(get_db)):
+def register(user_auth: UserCreate, db: Session = Depends(get_db), _rate_limit: None = Depends(limit_auth_requests)):
     existing_user = auth_crud.get_user_by_username(db, user_auth.username)
     if existing_user:
         raise HTTPException(
@@ -28,7 +28,7 @@ def register(user_auth: UserCreate, db: Session = Depends(get_db)):
     return new_user
 
 @router.post("/login", response_model=Token)
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db), _rate_limit: None = Depends(limit_auth_requests)):
     user = authenticate_user(db, form_data.username, form_data.password)
 
     if not user:
@@ -48,3 +48,17 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 @router.get("/me", response_model=UserResponse)
 def get_current_user_info(current_user_auth: UserResponse = Depends(get_current_user)):
     return current_user_auth
+
+
+@router.post("/forgot-password")
+def forgot_password(reset_data: PasswordReset, db: Session = Depends(get_db), _rate_limit: None = Depends(limit_auth_requests)):
+    user = auth_crud.reset_password(db, reset_data.email, reset_data.new_password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No account registered with this email address or username."
+        )
+    return {
+        "message": "Password reset successfully. You can now log in with your new password.",
+        "username": user.username
+    }

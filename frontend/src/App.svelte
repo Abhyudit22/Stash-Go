@@ -16,6 +16,9 @@
   import Bills from "./lib/Bills.svelte";
   import Sales from "./lib/Sales.svelte";
   import Returns from "./lib/Returns.svelte";
+  import CommandPalette from "./lib/CommandPalette.svelte";
+  import Toast from "./lib/Toast.svelte";
+  import { toast } from "./lib/toastStore";
 
   let websiteName = "Stash GO";
   
@@ -27,6 +30,7 @@
   let returnsHistory = $state<any[]>([]); 
   let salesAnalytics = $state<any>(null); 
   let isAuthenticated = $state(false);
+  let isCmdOpen = $state(false);
 
   let newProduct = $state({
     sku: "",
@@ -43,40 +47,66 @@
 
   // --- NATIVE ROUTING SYSTEM ---
   function navigate(page: string) {
+    if (page === "landing" || page === "home") {
+      showLanding = true;
+      activePage = "landing";
+      window.history.pushState({ page: "landing" }, "", "/");
+      return;
+    }
+
+    showLanding = false;
     activePage = page;
-    // Updates the browser URL without refreshing the page
     window.history.pushState({ page }, "", `/${page}`);
   }
 
   function handleLaunch() {
     showLanding = false;
-    window.history.pushState({ page: 'login' }, "", "/login");
+    if (!isAuthenticated) {
+      window.history.pushState({ page: 'login' }, "", "/login");
+      activePage = "login";
+    } else {
+      navigate("dashboard");
+    }
   }
 
   onMount(async () => {
+    document.documentElement.setAttribute('data-theme', 'dark');
+
     const data = await pingServer();
     backendStatus = data.status;
     
+    const currentPath = window.location.pathname;
+
     if (localStorage.getItem("token")) {
         isAuthenticated = true;
-        showLanding = false;
-        navigate("dashboard"); // Set URL to /dashboard automatically
+        if (currentPath === "/" || currentPath === "/landing" || currentPath === "") {
+            showLanding = true;
+            activePage = "landing";
+        } else {
+            showLanding = false;
+            activePage = currentPath.replace("/", "") || "dashboard";
+        }
         await refreshAllData();
     } else {
-        // If no token, make sure URL is at root
-        window.history.pushState({}, "", "/");
+        showLanding = true;
+        window.history.pushState({ page: "landing" }, "", "/");
     }
 
-    // Handle user clicking the "Back" button in their browser
     window.addEventListener('popstate', (event) => {
       if (event.state && event.state.page) {
         if (event.state.page === 'login') {
             showLanding = false;
+            activePage = "login";
+        } else if (event.state.page === 'landing') {
+            showLanding = true;
+            activePage = "landing";
         } else {
+            showLanding = false;
             activePage = event.state.page;
         }
       } else {
         showLanding = true;
+        activePage = "landing";
       }
     });
   });
@@ -86,6 +116,12 @@
     salesHistory = await getAllSales();
     salesAnalytics = await getDashboardAnalytics(); 
     returnsHistory = await getAllReturns(); 
+
+    // Check for low stock warnings
+    const lowStock = products.filter(p => p.quantity_left <= 5);
+    if (lowStock.length > 0) {
+      toast.warning("Low Stock Alert", `${lowStock.length} items require replenishment.`, 5000);
+    }
   }
 
   // --- INVENTORY MANAGEMENT ---
@@ -124,8 +160,6 @@
   }
 
   // --- BILLING COUNTER (DRAFTS) ---
-  
-  // NEW: Helper function to fetch the fresh, full bill data from the backend
   async function refreshActiveBill(): Promise<void> {
     if (!activeBill) return;
     try {
@@ -137,7 +171,6 @@
         }
       });
       if (res.ok) {
-        // Cast the JSON response to the Bill type to satisfy TypeScript
         activeBill = (await res.json()) as Bill; 
       }
     } catch (err) {
@@ -159,7 +192,6 @@
     });
     
     if (updatedItem) { 
-      // Refresh the full bill to get the new items array and totals
       await refreshActiveBill();
       saleSku = ""; 
       saleQty = 1; 
@@ -173,7 +205,6 @@
     
     const successMessage = await removeItemFromBill(activeBill.id, itemId);
     if (successMessage) {
-      // Refresh the full bill to remove the item from the UI and update totals
       await refreshActiveBill();
     } else {
       alert("Failed to remove item.");
@@ -220,13 +251,12 @@
     }
   }
 
-// --- AUTH ---
+  // --- AUTH ---
   function handleLogout() { 
     localStorage.removeItem("token"); 
     isAuthenticated = false; 
     showLanding = true; 
     
-    // CRITICAL: Wipe all user-specific data from Svelte's memory!
     products = [];
     salesHistory = [];
     returnsHistory = [];
@@ -248,32 +278,62 @@
   <Landing launchApp={handleLaunch} />
 
 {:else}
-  <div class="StashGo-Layout">
-    {#if !isAuthenticated}
-      <Login onLoginSuccess={() => { 
-        isAuthenticated = true; 
-        navigate("dashboard");
-        refreshAllData(); 
-      }} />
-    {:else}
-      <header>
-        <div class="header-brand">
-          <h1>{websiteName}</h1>
-          <span class="status-indicator {backendStatus === 'ok' ? 'online' : 'offline'}">
-            Backend: {backendStatus}
-          </span>
-        </div>
-         <nav>
-          <button class:active={activePage === "dashboard"} on:click={() => navigate("dashboard")}>Dashboard</button>
-          <button class:active={activePage === "inventory"} on:click={() => navigate("inventory")}>Inventory</button>
-          <button class:active={activePage === "counter"} on:click={() => navigate("counter")}>Billing Counter</button>
-          <button class:active={activePage === "sales"} on:click={() => navigate("sales")}>Sales Ledger</button>
-          <button class:active={activePage === "returns"} on:click={() => navigate("returns")}>Returns</button>
-          <button class="btn-logout" on:click={handleLogout}>Logout</button>
-        </nav>
-      </header>
+  <Toast />
+  <CommandPalette 
+    bind:isOpen={isCmdOpen} 
+    {products} 
+    onClose={() => isCmdOpen = false} 
+    onNavigate={navigate}
+    onSelectProduct={(p) => {
+      saleSku = p.sku;
+      navigate('counter');
+    }}
+  />
 
-      <main>
+  <div class="StashGo-Layout">
+    
+    <!-- Top Header Navigation Bar -->
+    <header class="app-header">
+      <button class="header-brand-btn" onclick={() => navigate("landing")}>
+        <span class="logo-box">📦</span>
+        <span class="logo-text">Stash <span class="gradient-accent">GO</span></span>
+      </button>
+
+      <div class="header-status">
+        <span class="status-pill {backendStatus === 'ok' ? 'online' : 'offline'}">
+          <span class="dot"></span> Backend: {backendStatus}
+        </span>
+      </div>
+
+      <nav class="app-nav">
+        <!-- Direct Landing link -->
+        <button class="nav-btn home-link" onclick={() => navigate("landing")}>
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+          Home
+        </button>
+
+        {#if isAuthenticated}
+          <button class="nav-btn" class:active={activePage === "dashboard"} onclick={() => navigate("dashboard")}>Dashboard</button>
+          <button class="nav-btn" class:active={activePage === "inventory"} onclick={() => navigate("inventory")}>Inventory</button>
+          <button class="nav-btn" class:active={activePage === "counter"} onclick={() => navigate("counter")}>Billing Counter</button>
+          <button class="nav-btn" class:active={activePage === "sales"} onclick={() => navigate("sales")}>Sales Ledger</button>
+          <button class="nav-btn" class:active={activePage === "returns"} onclick={() => navigate("returns")}>Returns</button>
+          <button class="btn-logout" onclick={handleLogout}>Logout</button>
+        {:else}
+          <button class="nav-btn primary-login" onclick={() => activePage = "login"}>Shopkeeper Login</button>
+        {/if}
+      </nav>
+    </header>
+
+    <main class="app-main-content">
+      {#if !isAuthenticated}
+        <Login onLoginSuccess={() => { 
+          isAuthenticated = true; 
+          navigate("dashboard");
+          refreshAllData(); 
+        }} />
+
+      {:else}
         {#if activePage === "dashboard"}
           <Dashboard {backendStatus} analyticsData={salesAnalytics} />
         
@@ -292,24 +352,164 @@
         {:else if activePage === "returns"}
           <Returns {returnsHistory} {handleProcessReturn} />
         {/if}
-      </main>
-    {/if}
+      {/if}
+    </main>
   </div>
 {/if}
 
 <style>
-  .StashGo-Layout { background-color: #121214; min-height: 100vh; min-width: max-content; color: #e1e1e6; font-family: system-ui, -apple-system, sans-serif; box-sizing: border-box; }
-  header, .header-brand, nav { display: flex; align-items: center; }
-  header { background: #1e1e24; padding: 15px 40px; justify-content: space-between; border-bottom: 1px solid #29292e; }
-  .header-brand { gap: 15px; }
-  h1 { margin: 0; font-size: 24px; color: #00bcd4; letter-spacing: 0.5px; }
-  main { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
-  nav { gap: 10px; }
-  nav button { background: transparent; border: none; color: #a8a8b3; padding: 8px 16px; cursor: pointer; font-size: 14px; font-weight: 500; border-radius: 4px; transition: all 0.2s ease; }
-  nav button:hover, nav button.active { color: #121214; background: #00bcd4; }
-  nav .btn-logout { border: 1px solid #ff5252; color: #ff5252; margin-left: 15px; }
-  nav .btn-logout:hover { background: #ff5252; color: #ffffff; }
-  .status-indicator { font-size: 11px; padding: 3px 8px; border-radius: 12px; text-transform: uppercase; font-weight: bold; border: 1px solid transparent; }
-  .status-indicator.online { background: rgba(76, 175, 80, 0.15); color: #4caf50; border-color: rgba(76, 175, 80, 0.3); }
-  .status-indicator.offline { background: rgba(255, 82, 82, 0.15); color: #ff5252; border-color: rgba(255, 82, 82, 0.3); }
+  .StashGo-Layout {
+    min-height: 100vh;
+    background-color: var(--bg-app);
+    color: var(--text-main);
+  }
+
+  .app-header {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-bottom: var(--glass-border-subtle);
+    padding: 14px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow-sm);
+    transition: background 0.3s ease;
+  }
+
+  .header-brand-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0;
+    transition: transform 0.2s ease;
+  }
+
+  .header-brand-btn:hover {
+    transform: scale(1.02);
+  }
+
+  .logo-box {
+    font-size: 20px;
+    background: rgba(15, 90, 71, 0.08);
+    padding: 6px 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(15, 90, 71, 0.2);
+  }
+
+  .logo-text {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--accent-primary);
+    letter-spacing: -0.5px;
+  }
+
+  .app-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .nav-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 20px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .nav-btn:hover {
+    color: var(--accent-primary);
+    background: #f1f5f9;
+  }
+
+  .nav-btn.active {
+    color: #ffffff;
+    background: var(--accent-primary);
+    box-shadow: 0 4px 12px rgba(15, 90, 71, 0.25);
+  }
+
+  .home-link {
+    color: var(--accent-secondary);
+  }
+
+  .primary-login {
+    background: var(--accent-primary);
+    color: #ffffff !important;
+    padding: 8px 20px;
+  }
+
+  .btn-logout {
+    background: rgba(225, 29, 72, 0.08);
+    border: 1px solid rgba(225, 29, 72, 0.2);
+    color: var(--accent-danger);
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+    border-radius: 20px;
+    margin-left: 10px;
+    transition: all 0.2s ease;
+  }
+
+  .btn-logout:hover {
+    background: var(--accent-danger);
+    color: #ffffff;
+  }
+
+  .status-pill {
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .status-pill .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+
+  .status-pill.online {
+    background: rgba(16, 185, 129, 0.12);
+    color: #047857;
+    border: 1px solid rgba(16, 185, 129, 0.25);
+  }
+
+  .status-pill.online .dot {
+    background: var(--accent-success);
+    box-shadow: 0 0 6px var(--accent-success);
+  }
+
+  .status-pill.offline {
+    background: rgba(225, 29, 72, 0.12);
+    color: var(--accent-danger);
+    border: 1px solid rgba(225, 29, 72, 0.25);
+  }
+
+  .status-pill.offline .dot {
+    background: var(--accent-danger);
+  }
+
+  .app-main-content {
+    max-width: 1240px;
+    margin: 30px auto;
+    padding: 0 20px;
+  }
 </style>

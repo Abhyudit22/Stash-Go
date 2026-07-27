@@ -2,6 +2,7 @@ from models import User_Auth
 from schemas import UserCreate
 from utils.auth import get_password_hash
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 
 def create_user(db: Session, user: UserCreate):
@@ -22,8 +23,24 @@ def create_user(db: Session, user: UserCreate):
 
 
 def get_user_by_username(db: Session, username: str):
-    return db.query(User_Auth).filter(User_Auth.username == username).first()  # Changed
+    clean_username = username.strip()
+    return db.query(User_Auth).filter(func.lower(User_Auth.username) == clean_username.lower()).first()
 
 
 def get_user_by_email(db: Session, email: str):
-    return db.query(User_Auth).filter(User_Auth.email == email).first()  # Changed
+    clean_email = email.strip()
+    return db.query(User_Auth).filter(func.lower(User_Auth.email) == clean_email.lower()).first()
+
+
+def reset_password(db: Session, identifier: str, new_password: str):
+    clean_id = identifier.strip()
+    db_user = db.query(User_Auth).filter(
+        (func.lower(User_Auth.email) == clean_id.lower()) |
+        (func.lower(User_Auth.username) == clean_id.lower())
+    ).first()
+    if not db_user:
+        return None
+    db_user.hashed_password = get_password_hash(new_password)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
