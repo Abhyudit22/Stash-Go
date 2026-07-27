@@ -4,6 +4,7 @@ from database import get_db
 from crud import bill_crud
 from schemas import BillCreate, BillUpdate, BillItemCreate
 from utils.auth import get_current_user
+from models import Bill
 import models
 
 router = APIRouter(prefix="/bills", tags=["Billing"])
