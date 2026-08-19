@@ -304,3 +304,84 @@ export async function deleteSaleBill(billId: number) {
         return false;
     }
 }
+
+// --- AI Feature API Functions ---
+
+export async function aiChat(question: string) {
+    try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(`${Base_URL}/ai/chat`, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ question })
+        });
+        if (!response.ok) return null;
+        return await response.json();
+    } catch (error) {
+        console.error("AI Chat error:", error);
+        return null;
+    }
+}
+
+export async function aiSemanticSearch(query: string, limit: number = 10) {
+    try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(`${Base_URL}/ai/search?q=${encodeURIComponent(query)}&limit=${limit}`, {
+            method: "GET",
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (!response.ok) return [];
+        return await response.json();
+    } catch (error) {
+        console.error("AI Search error:", error);
+        return [];
+    }
+}
+
+export async function aiForecast(days: number = 7) {
+    try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(`${Base_URL}/ai/forecast?days=${days}`, {
+            method: "GET",
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (!response.ok) return null;
+        return await response.json();
+    } catch (error) {
+        console.error("AI Forecast error:", error);
+        return null;
+    }
+}
+
+export async function aiRecommendations(productId: number, limit: number = 5) {
+    try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(`${Base_URL}/ai/recommendations/${productId}?limit=${limit}`, {
+            method: "GET",
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (!response.ok) return [];
+        return await response.json();
+    } catch (error) {
+        console.error("AI Recommendations error:", error);
+        return [];
+    }
+}
+
+export async function aiInsights() {
+    try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(`${Base_URL}/ai/insights`, {
+            method: "GET",
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (!response.ok) return null;
+        return await response.json();
+    } catch (error) {
+        console.error("AI Insights error:", error);
+        return null;
+    }
+}

@@ -18,6 +18,7 @@
   import Returns from "./lib/Returns.svelte";
   import CommandPalette from "./lib/CommandPalette.svelte";
   import Toast from "./lib/Toast.svelte";
+  import AIChatPanel from "./lib/AIChatPanel.svelte";
   import { toast } from "./lib/toastStore";
 
   let websiteName = "Stash GO";
@@ -281,6 +282,9 @@
 
 {:else}
   <Toast />
+  {#if isAuthenticated}
+    <AIChatPanel />
+  {/if}
   <CommandPalette 
     bind:isOpen={isCmdOpen} 
     {products} 
@@ -513,5 +517,35 @@
     max-width: 1240px;
     margin: 30px auto;
     padding: 0 20px;
+  }
+
+  @media (max-width: 850px) {
+    .app-header {
+      flex-direction: column;
+      padding: 14px 20px;
+      gap: 16px;
+    }
+    
+    .header-status {
+      display: none;
+    }
+    
+    .app-nav {
+      width: 100%;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      justify-content: flex-start;
+      padding-bottom: 8px;
+    }
+
+    .app-nav::-webkit-scrollbar {
+      height: 4px;
+    }
+
+    .nav-btn {
+      white-space: nowrap;
+      padding: 8px 12px;
+      font-size: 13px;
+    }
   }
 </style>

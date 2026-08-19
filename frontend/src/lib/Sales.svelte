@@ -418,7 +418,7 @@
   .upi-dot::before { background: var(--accent-secondary); }
   .cash-dot::before { background: var(--accent-warning); }
 
-  .panel-card {
+  .panel-card { min-width: 0;
     background: var(--bg-card);
     border: 1px solid var(--border-light);
     padding: 24px;

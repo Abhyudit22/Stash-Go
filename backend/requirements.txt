@@ -10,3 +10,6 @@ fpdf2
 psycopg2-binary
 argon2_cffi
 python-multipart
+scikit-learn
+numpy
+sentence-transformers

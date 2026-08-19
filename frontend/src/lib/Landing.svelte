@@ -353,4 +353,25 @@
   .text-green { color: #047857; }
   .text-purple { color: var(--accent-purple); }
   .text-amber { color: var(--accent-warning); }
+
+  @media (max-width: 768px) {
+    .navbar {
+      flex-direction: column;
+      padding: 20px;
+      gap: 16px;
+    }
+    
+    .headline {
+      font-size: 36px;
+    }
+    
+    .hero-section {
+      padding: 40px 20px;
+    }
+    
+    .features-grid {
+      padding: 40px 20px;
+      grid-template-columns: 1fr;
+    }
+  }
 </style>

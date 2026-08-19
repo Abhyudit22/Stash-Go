@@ -1,17 +1,50 @@
 <script lang="ts">
-  export let backendStatus: string;
-  export let analyticsData: {
-    total_products: number;
-    total_sales_count: number;
-    total_revenue: number;
-    total_profit: number;
-    low_stock_products: Array<{ id: number; name: string; sku: string; quantity_left: number }>;
-    top_selling_products: Array<{ product_id: string; product_name: string; total_quantity_sold: number; total_revenue: number }>;
-    recent_sales: Array<{ sale_id: number; product_name: string; quantity: number; total_amount: number; sale_date: string }>;
-  } | null = null;
-  import { Base_URL } from "./api";
+  import { Base_URL, aiInsights, aiForecast } from "./api";
+
+  let {
+    backendStatus = "offline",
+    analyticsData = null
+  }: {
+    backendStatus?: string;
+    analyticsData?: {
+      total_products: number;
+      total_sales_count: number;
+      total_revenue: number;
+      total_profit: number;
+      low_stock_products: Array<{ id: number; name: string; sku: string; quantity_left: number }>;
+      top_selling_products: Array<{ product_id: string; product_name: string; total_quantity_sold: number; total_revenue: number }>;
+      recent_sales: Array<{ sale_id: number; product_name: string; quantity: number; total_amount: number; sale_date: string }>;
+    } | null;
+  } = $props();
 
   type ReportType = 'excel' | 'pdf';
+
+  let insights: any = $state(null);
+  let forecast: any = $state(null);
+  let insightsLoading = $state(true);
+  let forecastLoading = $state(true);
+  let forecastView = $state('daily');
+
+  $effect(() => {
+    if (analyticsData) {
+      loadAIData();
+    }
+  });
+
+  async function loadAIData() {
+    insightsLoading = true;
+    forecastLoading = true;
+    
+    const [insightsRes, forecastRes] = await Promise.all([
+      aiInsights(),
+      aiForecast(7)
+    ]);
+    
+    insights = insightsRes;
+    forecast = forecastRes;
+    insightsLoading = false;
+    forecastLoading = false;
+  }
 
   async function downloadReport(type: ReportType): Promise<void> {
     try {
@@ -132,6 +165,62 @@
       </div>
     </div>
 
+    <!-- AI Revenue Forecast -->
+    <div class="data-panel full-width-panel" style="margin-bottom: 24px;">
+      <div class="panel-header-title text-emerald" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; width: 100%; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+          📊 AI Revenue Forecast (Next 7 Days)
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          {#if forecast && forecast.forecast && forecast.forecast.length > 0}
+            <div class="view-toggle" style="display: flex; background: rgba(0,0,0,0.2); border-radius: 20px; padding: 2px;">
+              <button 
+                class="toggle-btn {forecastView === 'daily' ? 'active' : ''}" 
+                onclick={() => forecastView = 'daily'}
+                style="background: {forecastView === 'daily' ? 'var(--accent-primary)' : 'transparent'}; color: {forecastView === 'daily' ? '#fff' : 'var(--text-muted)'}; border: none; padding: 4px 12px; border-radius: 18px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s;"
+              >Daily</button>
+              <button 
+                class="toggle-btn {forecastView === 'overall' ? 'active' : ''}" 
+                onclick={() => forecastView = 'overall'}
+                style="background: {forecastView === 'overall' ? 'var(--accent-primary)' : 'transparent'}; color: {forecastView === 'overall' ? '#fff' : 'var(--text-muted)'}; border: none; padding: 4px 12px; border-radius: 18px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s;"
+              >Overall</button>
+            </div>
+          {/if}
+          <span style="font-size: 11px; font-weight: 600; color: var(--text-muted); background: rgba(16, 185, 129, 0.1); padding: 3px 10px; border-radius: 12px;">Powered by ML</span>
+        </div>
+      </div>
+      
+      {#if forecastLoading}
+        <p class="no-data-msg">Loading AI forecast model...</p>
+      {:else if forecast && forecast.forecast && forecast.forecast.length > 0}
+        {#if forecastView === 'daily'}
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px;">
+            {#each forecast.forecast as point}
+              <div style="flex: 1; min-width: 100px; background: var(--bg-card-hover); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-light); text-align: center;">
+                <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">{point.date}</div>
+                <div style="font-size: 18px; font-weight: 800; color: var(--accent-primary); margin-top: 4px;">₹{point.predicted_revenue.toFixed(0)}</div>
+                <div style="font-size: 10px; color: var(--accent-mint); margin-top: 2px;">~{point.predicted_quantity.toFixed(0)} units</div>
+              </div>
+            {/each}
+          </div>
+        {:else}
+          <div style="margin-top: 16px; background: var(--bg-card-hover); padding: 24px; border-radius: var(--radius-sm); border: 1px solid var(--border-light); text-align: center;">
+            <div style="font-size: 14px; color: var(--text-muted); font-weight: 600; margin-bottom: 8px;">Total Projected Revenue (Next 7 Days)</div>
+            <div style="font-size: 36px; font-weight: 800; color: var(--accent-primary);">
+              ₹{forecast.forecast.reduce((sum, p) => sum + p.predicted_revenue, 0).toFixed(0)}
+            </div>
+            <div style="font-size: 14px; color: var(--accent-mint); margin-top: 4px;">
+              ~{forecast.forecast.reduce((sum, p) => sum + p.predicted_quantity, 0).toFixed(0)} total units
+            </div>
+          </div>
+        {/if}
+        <div style="margin-top: 10px; font-size: 11px; color: var(--text-muted); text-align: right;">Model: {forecast.model_type} | Training points: {forecast.data_points_used}</div>
+      {:else}
+        <p class="no-data-msg">Not enough sales data for AI forecasting. Need at least 3 days of history.</p>
+      {/if}
+    </div>
+
     <!-- Split Data Layout -->
     <div class="dashboard-split-layout">
       
@@ -217,6 +306,34 @@
             </tbody>
           </table>
         </div>
+      {/if}
+    </div>
+
+    <!-- AI Smart Insights -->
+    <div class="data-panel full-width-panel margin-top-md">
+      <div class="panel-header-title text-emerald">
+        🧠 AI-Powered Business Insights
+        <span style="margin-left: auto; font-size: 11px; font-weight: 600; color: var(--text-muted); background: rgba(16, 185, 129, 0.1); padding: 3px 10px; border-radius: 12px;">Anomaly Detection</span>
+      </div>
+      {#if insightsLoading}
+        <p class="no-data-msg">AI is analyzing your business data...</p>
+      {:else if insights && insights.insights && insights.insights.length > 0}
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          {#each insights.insights as insight}
+            <div style="display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border-light); background: {insight.severity === 'critical' ? 'rgba(244, 63, 94, 0.06)' : insight.severity === 'warning' ? 'rgba(217, 119, 6, 0.06)' : 'rgba(16, 185, 129, 0.06)'}; border-left: 4px solid {insight.severity === 'critical' ? 'var(--accent-danger)' : insight.severity === 'warning' ? 'var(--accent-warning)' : 'var(--accent-primary)'};">
+              <span style="font-size: 20px;">{insight.type === 'anomaly' ? '⚠️' : insight.type === 'warning' ? '🔴' : insight.type === 'trend' ? '📈' : '💡'}</span>
+              <div style="flex: 1;">
+                <div style="font-weight: 700; font-size: 13px; color: var(--text-main);">{insight.title}</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 3px;">{insight.description}</div>
+              </div>
+              {#if insight.metric_value !== null && insight.metric_value !== undefined}
+                <span style="font-family: monospace; font-weight: 800; font-size: 14px; color: var(--accent-primary);">{typeof insight.metric_value === 'number' ? (insight.metric_value > 100 ? '₹' + insight.metric_value.toFixed(0) : insight.metric_value.toFixed(1) + '%') : insight.metric_value}</span>
+              {/if}
+            </div>
+          {/each}
+        </div>
+      {:else}
+        <div class="clean-state-box">🧠 AI insights will appear here once you have sales data.</div>
       {/if}
     </div>
   {/if}
@@ -443,6 +560,7 @@
     padding: 24px;
     box-shadow: var(--shadow-sm);
     box-sizing: border-box;
+    min-width: 0;
   }
 
   .panel-header-title {

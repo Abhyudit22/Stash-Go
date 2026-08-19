@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Product, BillItem, Bill } from './types';
   import { toast } from './toastStore';
+  import { aiRecommendations } from './api';
 
   let {
     products = [],
@@ -37,6 +38,26 @@
   let searchQuery = $state("");
   let showReceiptModal = $state(false);
   let lastFinalizedReceipt: any = $state(null);
+  let recommendations: any[] = $state([]);
+  let recsLoading = $state(false);
+
+  $effect(() => {
+    if (activeBill && activeBill.items && activeBill.items.length > 0) {
+      loadRecommendations(activeBill.items[activeBill.items.length - 1].product_id);
+    } else {
+      recommendations = [];
+    }
+  });
+
+  async function loadRecommendations(productId: number) {
+    recsLoading = true;
+    try {
+      recommendations = await aiRecommendations(productId) || [];
+    } catch {
+      recommendations = [];
+    }
+    recsLoading = false;
+  }
 
   let filteredProducts = $derived(
     products.filter(p => 
@@ -178,6 +199,25 @@
 
           <button type="submit" class="btn-action secondary">Append Item Line</button>
         </form>
+
+        <!-- AI Recommendations -->
+        {#if recommendations.length > 0}
+          <div class="ai-recs-section">
+            <div class="ai-recs-header">🛒 Frequently Bought Together <span class="ai-badge">AI</span></div>
+            <div class="ai-recs-chips">
+              {#each recommendations.slice(0, 4) as rec}
+                <button type="button" class="ai-rec-chip" onclick={() => {
+                  saleSku = String(rec.product_id);
+                  handleAddItemToBill();
+                }}>
+                  <span class="rec-name">{rec.product_name}</span>
+                  <span class="rec-price">₹{rec.selling_price}</span>
+                  <span class="rec-confidence">{(rec.confidence * 100).toFixed(0)}% match</span>
+                </button>
+              {/each}
+            </div>
+          </div>
+        {/if}
 
         <div class="panel-title margin-top text-amber">Step 3: Financial Modifiers</div>
         <form onsubmit={(e) => { e.preventDefault(); localCheckout(); }} class="stacked-form">
@@ -345,7 +385,7 @@
     .checkout-layout-grid { grid-template-columns: 1fr; }
   }
   
-  .panel-card {
+  .panel-card { min-width: 0;
     background: var(--bg-card);
     border: 1px solid var(--border-light);
     padding: 24px;
@@ -498,7 +538,7 @@
   .btn-close-modal { background: #e2e8f0; color: #334155; border: none; padding: 8px; border-radius: 6px; cursor: pointer; }
 
   @media (max-width: 600px) {
-    .panel-card {
+    .panel-card { min-width: 0;
       padding: 16px;
     }
     .field-row {
@@ -539,4 +579,62 @@
       padding: 16px;
     }
   }
+
+  /* AI Recommendations */
+  .ai-recs-section {
+    margin-top: 16px;
+    padding: 14px;
+    background: rgba(16, 185, 129, 0.04);
+    border: 1px dashed rgba(16, 185, 129, 0.25);
+    border-radius: var(--radius-sm);
+  }
+
+  .ai-recs-header {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent-primary);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ai-badge {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--accent-primary);
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+  }
+
+  .ai-recs-chips {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .ai-rec-chip {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 100px;
+  }
+
+  .ai-rec-chip:hover {
+    border-color: var(--accent-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+  }
+
+  .rec-name { font-size: 12px; font-weight: 700; color: var(--text-main); }
+  .rec-price { font-size: 11px; font-weight: 800; color: #047857; }
+  .rec-confidence { font-size: 9px; color: var(--text-muted); font-weight: 600; }
 </style>

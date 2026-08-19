@@ -108,7 +108,7 @@
     .checkout-layout-grid { grid-template-columns: 1fr; }
   }
   
-  .panel-card {
+  .panel-card { min-width: 0;
     background: var(--bg-card);
     border: 1px solid var(--border-light);
     padding: 24px;

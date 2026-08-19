@@ -203,3 +203,49 @@ class DashboardResponse(BaseModel):
     low_stock_products: List[LowStockProduct]
     top_selling_products: List[TopSellingProduct]
     recent_sales: List[RecentSaleInfo]
+
+# AI Feature Schemas
+class ChatRequest(BaseModel):
+    question: str
+
+class ChatResponse(BaseModel):
+    answer: str
+    data: Optional[dict] = None
+    intent: str
+
+class SearchResult(BaseModel):
+    product_id: int
+    product_name: str
+    sku: str
+    selling_price: float
+    quantity_left: int
+    similarity_score: float = 0.0
+
+class ForecastPoint(BaseModel):
+    date: str
+    predicted_revenue: float
+    predicted_quantity: float
+
+class ForecastResponse(BaseModel):
+    forecast: List[ForecastPoint]
+    model_type: str
+    data_points_used: int
+
+class RecommendationItem(BaseModel):
+    product_id: int
+    product_name: str
+    sku: str
+    selling_price: float
+    co_purchase_count: int
+    confidence: float
+
+class InsightItem(BaseModel):
+    type: str  # trend, anomaly, warning, tip
+    title: str
+    description: str
+    severity: str  # info, warning, critical
+    metric_value: Optional[float] = None
+
+class InsightsResponse(BaseModel):
+    insights: List[InsightItem]
+    generated_at: datetime

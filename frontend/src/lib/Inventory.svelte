@@ -184,6 +184,7 @@
     box-shadow: var(--shadow-sm);
     display: flex;
     flex-direction: column;
+    min-width: 0;
   }
 
   .panel-title {
@@ -237,7 +238,7 @@
 
   .stacked-form, .price-matrix { display: flex; flex-direction: column; }
   .stacked-form { gap: 16px; }
-  .field-row { gap: 16px; width: 100%; display: flex; }
+  .field-row { gap: 16px; width: 100%; display: flex; flex-wrap: wrap; }
   .field-group { flex: 1; display: flex; flex-direction: column; }
   .field-group label { font-size: 13px; color: var(--text-muted); margin-bottom: 6px; font-weight: 600; }
   

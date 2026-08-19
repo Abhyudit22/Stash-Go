@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from database import eng , Base
 import models
-from routes import product_routes, sale_routes, analytics_routes, return_routes, bill_routes, auth_routes ,report_routes
+from routes import product_routes, sale_routes, analytics_routes, return_routes, bill_routes, auth_routes ,report_routes, ai_routes
 from fastapi.middleware.cors import CORSMiddleware
 
 @asynccontextmanager
@@ -39,6 +39,7 @@ app.include_router(return_routes.router)
 app.include_router(bill_routes.router)
 app.include_router(auth_routes.router)
 app.include_router(report_routes.router)
+app.include_router(ai_routes.router)
 @app.get("/")
 def read_root():
     """ 
